@@ -4,6 +4,7 @@ import { verifyAuthToken } from "@/lib/auth";
 import { assertSupabaseAdmin } from "@/lib/supabaseClient";
 import { DashboardNav } from "./NavBar";
 import { VideoClasses } from "./VideoClasses";
+import MaterialsSection, { MaterialSection } from "./MaterialsSection";
 
 export const metadata = {
   title: "QuickLearn | Dashboard",
@@ -26,6 +27,14 @@ type MaterialRow = {
   mime_type: string | null;
   size_bytes: number | null;
 };
+
+const fallbackMaterialCategories: Array<Pick<CategoryWithLessons, "id" | "name" | "description" | "lessons">> = [
+  { id: "cs", name: "Computer Science", description: null, lessons: [] },
+  { id: "math", name: "Mathematics", description: null, lessons: [] },
+  { id: "aptitude", name: "Aptitude", description: null, lessons: [] },
+  { id: "english", name: "English", description: null, lessons: [] },
+  { id: "others", name: "Others", description: null, lessons: [] },
+];
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -99,6 +108,14 @@ export default async function DashboardPage() {
     }
     materialsByCategory.get(mat.category_id)!.push(mat);
   }
+
+  const materialSections: MaterialSection[] = (categories.length ? categories : fallbackMaterialCategories).map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    materials: materialsByCategory.get(cat.id) ?? [],
+  }));
+
+  const mockTestCategories = categories.length ? categories : fallbackMaterialCategories;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900">
@@ -180,48 +197,7 @@ export default async function DashboardPage() {
         </section>
 
         <section className="space-y-4" id="materials">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Study Materials</p>
-            <p className="text-sm text-slate-600">Download PDFs, docs, and zips shared for your course.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {(categories.length ? categories : [{ id: "placeholder", name: "Category", description: null, lessons: [] }]).map((cat) => {
-              const mats = materialsByCategory.get(cat.id) ?? [];
-              return (
-                <div key={cat.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-sm font-semibold text-slate-900">{cat.name}</p>
-                  {mats.length === 0 ? (
-                    <p className="mt-2 text-xs text-slate-600">No materials yet.</p>
-                  ) : (
-                    <div className="mt-3 space-y-2">
-                      {mats.map((mat) => (
-                        <div key={mat.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
-                          <p className="font-semibold text-slate-900">{mat.title}</p>
-                          {mat.description && <p className="text-xs text-slate-600">{mat.description}</p>}
-                          <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                            <span>{mat.mime_type || "file"}</span>
-                            {typeof mat.size_bytes === "number" && <span>{Math.round(mat.size_bytes / 1024)} KB</span>}
-                          </div>
-                          {mat.signedUrl ? (
-                            <a
-                              className="mt-2 inline-flex w-full justify-center rounded-full bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
-                              href={mat.signedUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              Download
-                            </a>
-                          ) : (
-                            <p className="mt-2 text-xs text-rose-600">File link unavailable.</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <MaterialsSection sections={materialSections} />
         </section>
 
         <section className="space-y-4" id="mocktests">
@@ -230,7 +206,7 @@ export default async function DashboardPage() {
             <p className="text-sm text-slate-600">Practice modules are coming soon.</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {(categories.length ? categories : [{ id: "placeholder", name: "Category", description: null, lessons: [] }]).map((cat) => (
+            {mockTestCategories.map((cat) => (
               <div key={cat.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p className="text-sm font-semibold text-slate-900">{cat.name}</p>
                 <p className="mt-2 text-xs text-slate-600">Mock tests will be added soon.</p>

@@ -336,7 +336,6 @@ export default async function AdminPage() {
               await createMaterial(formData);
             }}
             className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
-            encType="multipart/form-data"
           >
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">Category</label>

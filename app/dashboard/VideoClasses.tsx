@@ -201,19 +201,16 @@ function PlyrEmbed({ playbackId, title, onMarkComplete }: { playbackId: string; 
   }
 
   return (
-    <div className="relative">
-      <div
-        ref={playerRef}
-        className="plyr__video-embed aspect-video"
-        data-plyr-provider="youtube"
-        data-plyr-embed-id={videoId}
-      />
-      {/* Overlays to suppress YouTube watermark/share regions */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="pointer-events-auto absolute right-0 top-0 h-12 w-24" onClick={(e) => e.preventDefault()} />
-        <div className="pointer-events-auto absolute bottom-2 right-0 h-12 w-24" onClick={(e) => e.preventDefault()} />
+    <div className="space-y-0">
+      <div className="relative">
+        <div
+          ref={playerRef}
+          className="plyr__video-embed aspect-video"
+          data-plyr-provider="youtube"
+          data-plyr-embed-id={videoId}
+        />
       </div>
-      <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+      <div className="mt-0 flex items-center justify-between border border-t-0 border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
         <span>Watch</span>
         <button
           onClick={onMarkComplete}

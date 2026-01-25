@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 
@@ -60,7 +61,9 @@ export default function LoginPage() {
         
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
-          <LoginForm />
+          <Suspense fallback={<div className="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-lg shadow-indigo-50 text-sm text-slate-500">Loading...</div>}>
+            <LoginForm />
+          </Suspense>
           <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-indigo-50 via-white to-emerald-50 p-6 shadow-md shadow-indigo-50">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Login requirements</p>
             <ul className="mt-3 space-y-2 text-sm text-slate-700">

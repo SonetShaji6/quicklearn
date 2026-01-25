@@ -1,8 +1,12 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { markLessonComplete } from "./actions";
 import { useRouter } from "next/navigation";
+import "plyr/dist/plyr.css";
+
+type PlyrInstance = { destroy?: () => void; source?: unknown };
+type PlyrConstructor = new (element: unknown, options?: unknown) => PlyrInstance;
 
 function clsx(...args: Array<string | false | null | undefined>) {
   return args.filter(Boolean).join(" ");
@@ -64,7 +68,7 @@ export function VideoClasses({ completed, categories }: { completed: string[]; c
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {selectedLesson ? (
-            <YouTubeEmbed
+            <PlyrEmbed
               playbackId={selectedLesson.playback_id}
               title={selectedLesson.title}
               onMarkComplete={() => handleCompleted(selectedLesson)}
@@ -115,38 +119,70 @@ export function VideoClasses({ completed, categories }: { completed: string[]; c
   );
 }
 
-function YouTubeEmbed({ playbackId, title, onMarkComplete }: { playbackId: string; title: string; onMarkComplete: () => void }) {
-  const embedUrl = useMemo(() => {
+function PlyrEmbed({ playbackId, title, onMarkComplete }: { playbackId: string; title: string; onMarkComplete: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  const playerRef = useRef<HTMLDivElement | null>(null);
+  const plyrInstance = useRef<PlyrInstance | null>(null);
+  // Intentional one-time flag for client render
+  useEffect(() => setMounted(true), []);
+
+  const videoId = useMemo(() => {
     try {
       const url = new URL(playbackId);
       const host = url.hostname.replace(/^www\./, "");
       if (!host.includes("youtube.com") && !host.includes("youtu.be")) return null;
-      let videoId = "";
       if (host.includes("youtu.be")) {
-        videoId = url.pathname.replace(/\//g, "");
-      } else {
-        videoId = url.searchParams.get("v") || "";
-        if (!videoId && url.pathname.startsWith("/embed/")) {
-          videoId = url.pathname.split("/embed/")[1];
-        }
+        return url.pathname.replace(/\//g, "");
       }
-      if (!videoId) return null;
-      const params = new URLSearchParams({
-        rel: "0",
-        modestbranding: "1",
-        iv_load_policy: "3",
-        controls: "1",
-        fs: "1",
-        disablekb: "1",
-        playsinline: "1",
-      });
-      return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+      const v = url.searchParams.get("v");
+      if (v) return v;
+      if (url.pathname.startsWith("/embed/")) {
+        return url.pathname.split("/embed/")[1];
+      }
+      return null;
     } catch {
       return null;
     }
   }, [playbackId]);
 
-  if (!embedUrl) {
+  const source = useMemo(() => {
+    if (!videoId) return null;
+    return {
+      type: "video" as const,
+      title,
+      sources: [{ src: videoId, provider: "youtube" as const }],
+    };
+  }, [videoId, title]);
+
+  // Create Plyr instance once on mount
+  useEffect(() => {
+    let isActive = true;
+    (async () => {
+      if (!mounted || !playerRef.current) return;
+      const PlyrMod = (await import("plyr")) as unknown as { default?: PlyrConstructor } & PlyrConstructor;
+      const PlyrCtor: PlyrConstructor = PlyrMod.default ?? (PlyrMod as PlyrConstructor);
+      if (!isActive) return;
+      plyrInstance.current = new PlyrCtor(playerRef.current as unknown, {
+        captions: { active: true, update: true, language: "en" },
+        fullscreen: { enabled: true, fallback: true, iosNative: true },
+        youtube: { rel: 0, modestbranding: 1 },
+        controls: ["play-large", "play", "progress", "current-time", "mute", "volume", "settings", "pip", "airplay", "fullscreen"],
+      });
+    })();
+    return () => {
+      isActive = false;
+      plyrInstance.current?.destroy?.();
+      plyrInstance.current = null;
+    };
+  }, [mounted]);
+
+  // Update source when video changes
+  useEffect(() => {
+    if (!plyrInstance.current || !source) return;
+    plyrInstance.current.source = source as unknown;
+  }, [source]);
+
+  if (!videoId) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2 bg-slate-50 text-sm text-slate-600">
         <p>Invalid YouTube URL for this lesson.</p>
@@ -160,18 +196,25 @@ function YouTubeEmbed({ playbackId, title, onMarkComplete }: { playbackId: strin
     );
   }
 
+  if (!mounted || !source) {
+    return <div className="aspect-video w-full bg-slate-100" />;
+  }
+
   return (
     <div className="relative">
-      <iframe
-        title={title}
-        src={embedUrl}
-        className="aspect-video w-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        sandbox="allow-same-origin allow-scripts allow-presentation"
-        allowFullScreen
+      <div
+        ref={playerRef}
+        className="plyr__video-embed aspect-video"
+        data-plyr-provider="youtube"
+        data-plyr-embed-id={videoId}
       />
+      {/* Overlays to suppress YouTube watermark/share regions */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-auto absolute right-0 top-0 h-12 w-24" onClick={(e) => e.preventDefault()} />
+        <div className="pointer-events-auto absolute bottom-2 right-0 h-12 w-24" onClick={(e) => e.preventDefault()} />
+      </div>
       <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-        <span>Watch on YouTube</span>
+        <span>Watch</span>
         <button
           onClick={onMarkComplete}
           className="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700"

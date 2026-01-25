@@ -30,3 +30,14 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* Hide YouTube watermark/branding inside Plyr embeds */
+.plyr__video-embed iframe {
+  top: -50%;
+  height: 200%;
+}
+
+.ytp-watermark,
+.ytp-youtube-button {
+  display: none !important;
+}

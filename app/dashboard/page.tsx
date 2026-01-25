@@ -1,0 +1,244 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { verifyAuthToken } from "@/lib/auth";
+import { assertSupabaseAdmin } from "@/lib/supabaseClient";
+import { DashboardNav } from "./NavBar";
+import { VideoClasses } from "./VideoClasses";
+
+export const metadata = {
+  title: "QuickLearn | Dashboard",
+  description: "Your QuickLearn MCA LBS dashboard for MCA LBS crash course.",
+};
+
+type CategoryWithLessons = {
+  id: string;
+  name: string;
+  description: string | null;
+  lessons: { id: string; title: string; description: string | null; playback_id: string; duration: string | null }[];
+};
+
+type MaterialRow = {
+  id: string;
+  category_id: string;
+  title: string;
+  description: string | null;
+  file_path: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+};
+
+export default async function DashboardPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
+
+  if (!token) {
+    return redirect("/login?next=/dashboard");
+  }
+
+  const payload = await verifyAuthToken(token);
+  if (payload.role === "admin") {
+    return redirect("/admin");
+  }
+
+  if (payload.status !== "approved") {
+    return redirect("/login?next=/dashboard");
+  }
+
+  const supabase = assertSupabaseAdmin();
+  const { data: user } = await supabase
+    .from("users")
+    .select("name,college,degree,status")
+    .eq("id", payload.userId)
+    .single();
+
+  if (!user || user.status !== "approved") {
+    return redirect("/login?next=/dashboard");
+  }
+
+  const { data: categoriesRaw } = await supabase
+    .from("categories")
+    .select("id,name,description,lessons:lessons(id,title,description,playback_id,duration)")
+    .order("created_at", { ascending: false });
+
+  const categories = (categoriesRaw as CategoryWithLessons[] | null) ?? [];
+  const lessons = categories.flatMap((c) => c.lessons ?? []);
+  const totalLessons = lessons.length;
+
+  const { data: progressRowsRaw } = await supabase
+    .from("lesson_progress")
+    .select("lesson_id, completed")
+    .eq("user_id", payload.userId);
+
+  const progressRows = (progressRowsRaw ?? []) as Array<{ lesson_id: string; completed: boolean }>;
+  const completedIds = progressRows.filter((row) => row.completed).map((row) => row.lesson_id);
+  const completedCount = completedIds.length;
+  const remaining = Math.max(totalLessons - completedCount, 0);
+  const progressPct = totalLessons === 0 ? 0 : Math.round((completedCount / totalLessons) * 100);
+
+  const { data: materialsRaw } = await supabase
+    .from("materials")
+    .select("id,category_id,title,description,file_path,mime_type,size_bytes")
+    .order("created_at", { ascending: false });
+
+  const materials = (materialsRaw as MaterialRow[] | null) ?? [];
+
+  const materialsWithUrls = await Promise.all(
+    materials.map(async (mat) => {
+      const { data } = await supabase.storage.from("study-materials").createSignedUrl(mat.file_path, 60 * 60);
+      return {
+        ...mat,
+        signedUrl: data?.signedUrl ?? null,
+      } as MaterialRow & { signedUrl: string | null };
+    })
+  );
+
+  const materialsByCategory = new Map<string, Array<MaterialRow & { signedUrl: string | null }>>();
+  for (const mat of materialsWithUrls) {
+    if (!materialsByCategory.has(mat.category_id)) {
+      materialsByCategory.set(mat.category_id, []);
+    }
+    materialsByCategory.get(mat.category_id)!.push(mat);
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900">
+      <DashboardNav />
+
+      <main className="mx-auto max-w-6xl space-y-10 px-4 pb-16 pt-8 sm:px-6" id="overview">
+        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-indigo-50">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Student overview</p>
+            <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user.name || payload.email}</h1>
+            <div className="grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Name</p>
+                <p className="text-sm font-semibold text-slate-900">{user.name}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">College</p>
+                <p className="text-sm font-semibold text-slate-900">{user.college}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Degree</p>
+                <p className="text-sm font-semibold text-slate-900">{user.degree}</p>
+              </div>
+              <div className="rounded-2xl bg-emerald-50 p-3">
+                <p className="text-xs uppercase tracking-[0.14em] text-emerald-600">Status</p>
+                <p className="text-sm font-semibold text-emerald-800">Approved</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm font-semibold text-slate-800">
+                <span>Overall course progress</span>
+                <span>{progressPct}%</span>
+              </div>
+              <div className="h-3 rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-indigo-600"
+                  style={{ width: `${progressPct}%` }}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progressPct}
+                />
+              </div>
+              <p className="text-xs text-slate-500">Progress updates automatically as you finish lessons.</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-indigo-50">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Summary</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Total lessons</p>
+                <p className="text-2xl font-bold text-slate-900">{totalLessons}</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-emerald-700">Completed</p>
+                <p className="text-2xl font-bold text-emerald-800">{completedCount}</p>
+              </div>
+              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-amber-700">Remaining</p>
+                <p className="text-2xl font-bold text-amber-800">{remaining}</p>
+              </div>
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+                <p className="text-xs uppercase tracking-[0.12em] text-indigo-700">Status</p>
+                <p className="text-sm font-semibold text-indigo-900">Approved student</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4" id="videos">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Video Classes</p>
+              <p className="text-sm text-slate-600">Select a category, pick a lesson, and watch the embedded YouTube video.</p>
+            </div>
+          </div>
+          <VideoClasses completed={completedIds} categories={categories} />
+        </section>
+
+        <section className="space-y-4" id="materials">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Study Materials</p>
+            <p className="text-sm text-slate-600">Download PDFs, docs, and zips shared for your course.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {(categories.length ? categories : [{ id: "placeholder", name: "Category", description: null, lessons: [] }]).map((cat) => {
+              const mats = materialsByCategory.get(cat.id) ?? [];
+              return (
+                <div key={cat.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-900">{cat.name}</p>
+                  {mats.length === 0 ? (
+                    <p className="mt-2 text-xs text-slate-600">No materials yet.</p>
+                  ) : (
+                    <div className="mt-3 space-y-2">
+                      {mats.map((mat) => (
+                        <div key={mat.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
+                          <p className="font-semibold text-slate-900">{mat.title}</p>
+                          {mat.description && <p className="text-xs text-slate-600">{mat.description}</p>}
+                          <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                            <span>{mat.mime_type || "file"}</span>
+                            {typeof mat.size_bytes === "number" && <span>{Math.round(mat.size_bytes / 1024)} KB</span>}
+                          </div>
+                          {mat.signedUrl ? (
+                            <a
+                              className="mt-2 inline-flex w-full justify-center rounded-full bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+                              href={mat.signedUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Download
+                            </a>
+                          ) : (
+                            <p className="mt-2 text-xs text-rose-600">File link unavailable.</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="space-y-4" id="mocktests">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Mock Test</p>
+            <p className="text-sm text-slate-600">Practice modules are coming soon.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {(categories.length ? categories : [{ id: "placeholder", name: "Category", description: null, lessons: [] }]).map((cat) => (
+              <div key={cat.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p className="text-sm font-semibold text-slate-900">{cat.name}</p>
+                <p className="mt-2 text-xs text-slate-600">Mock tests will be added soon.</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

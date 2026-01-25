@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## QuickLearn Auth & Payments Setup
 
-## Getting Started
+This project now includes secure signup, payment proof upload, admin approval, and status-gated login for the MCA LBS crash course.
 
-First, run the development server:
-
+### 1) Install dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2) Environment variables (create `.env.local`)
+```
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+AUTH_SECRET=long-random-string-for-jwt
+ADMIN_EMAILS=admin1@example.com,admin2@example.com
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3) Database & storage (Supabase / Postgres)
+- Run `docs/auth_schema.sql` in Supabase SQL editor to create the `users` table (now includes a `phone` column) and the new content tables: `categories`, `lessons` (stores YouTube video URL in `playback_id`), `lesson_progress`, and `materials`.
+- Create **private** storage buckets named `payment-proofs` and `study-materials`.
+- RLS is configured so only the service role (server actions) can write; students can read lessons/materials and only read their own progress.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4) Develop locally
+```bash
+npm run dev
+```
+Visit `/signup` to register with payment proof upload (stored privately) and `/login` to sign in. Accounts remain **pending** until an admin approves them.
 
-## Learn More
+### 5) Dashboard & video classes (YouTube)
+- The student dashboard lives at `/dashboard` and is only accessible to approved users.
+- Video classes now embed YouTube. Store the full YouTube URL in `lessons.playback_id` (e.g., `https://www.youtube.com/watch?v=VIDEO_ID` or `https://youtu.be/VIDEO_ID`).
+- Lesson completion is stored per user in the `lesson_progress` table. Because YouTube iframes don't reliably emit an "ended" event, students can mark completion via the "Mark completed" button under the player.
 
-To learn more about Next.js, take a look at the following resources:
+### 6) Admin content management (YouTube + Supabase)
+- Categories: create/edit/delete (deletes blocked if lessons/materials exist).
+- Videos: add a YouTube URL, plus title/description, linked to a category. The URL is stored in `lessons.playback_id`.
+- Materials: upload files (PDF/DOCX/ZIP, etc.) to the private `study-materials` bucket and link to a category.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 5) Admin dashboard
+- Go to `/admin` (protected by JWT + admin email allowlist).
+- View registrants, open signed URLs for payment proofs, and approve/reject users. Only **approved** users can log in successfully.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Notes
+- Passwords are hashed with `bcryptjs`. Auth tokens are JWTs signed with `AUTH_SECRET` and stored in HTTP-only cookies.
+- Payment proofs are uploaded via server actions using the Supabase service role key; proofs remain private and are exposed only through short-lived signed URLs for admins.

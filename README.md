@@ -1,13 +1,21 @@
-## QuickLearn Auth & Payments Setup
+## QuickLearn
 
-This project now includes secure signup, payment proof upload, admin approval, and status-gated login for the MCA LBS crash course.
+Full-stack Next.js app for the MCA LBS crash course with Supabase-backed auth, content, and mock tests.
 
-### 1) Install dependencies
+### Features
+- Auth: signup with payment proof upload, JWT login, admin approval gate.
+- Dashboard: video classes (YouTube URLs), study materials with signed URLs, lesson progress tracking.
+- Mock tests: timed MCQs stored in Supabase (tests, questions, attempts). Students see detailed review; admins see all attempts with per-question choices and search.
+- Admin: manage users, categories, lessons, materials, and mock tests.
+
+### Quick start
 ```bash
 npm install
+npm run dev
 ```
+App runs on http://localhost:3000. Use `/signup`, `/login`, `/dashboard`, `/admin`, `/admin/mock-tests`.
 
-### 2) Environment variables (create `.env.local`)
+### Environment (.env.local)
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -16,31 +24,57 @@ AUTH_SECRET=long-random-string-for-jwt
 ADMIN_EMAILS=admin1@example.com,admin2@example.com
 ```
 
-### 3) Database & storage (Supabase / Postgres)
-- Run `docs/auth_schema.sql` in Supabase SQL editor to create the `users` table (now includes a `phone` column) and the new content tables: `categories`, `lessons` (stores YouTube video URL in `playback_id`), `lesson_progress`, and `materials`.
-- Create **private** storage buckets named `payment-proofs` and `study-materials`.
-- RLS is configured so only the service role (server actions) can write; students can read lessons/materials and only read their own progress.
+### Database (Supabase)
+1) Run `docs/auth_schema.sql` to create `users`, `categories`, `lessons`, `lesson_progress`, `materials`.
+2) Add mock test tables (run in SQL editor):
+```sql
+create extension if not exists "pgcrypto";
 
-### 4) Develop locally
-```bash
-npm run dev
+create table if not exists mock_tests (
+	id uuid primary key default gen_random_uuid(),
+	title text not null,
+	category_id uuid not null references categories(id) on delete cascade,
+	duration_minutes integer not null check (duration_minutes > 0),
+	start_at timestamptz not null,
+	created_at timestamptz not null default now()
+);
+
+create table if not exists mock_questions (
+	id uuid primary key default gen_random_uuid(),
+	test_id uuid not null references mock_tests(id) on delete cascade,
+	text text not null,
+	option_a text not null,
+	option_b text not null,
+	option_c text not null,
+	option_d text not null,
+	correct_index smallint not null check (correct_index between 0 and 3),
+	created_at timestamptz not null default now()
+);
+
+create table if not exists mock_attempts (
+	test_id uuid not null references mock_tests(id) on delete cascade,
+	user_id uuid not null references users(id) on delete cascade,
+	answers integer[] not null default '{}',
+	score integer not null default 0,
+	total integer not null default 0,
+	submitted_at timestamptz not null default now(),
+	primary key (test_id, user_id)
+);
 ```
-Visit `/signup` to register with payment proof upload (stored privately) and `/login` to sign in. Accounts remain **pending** until an admin approves them.
 
-### 5) Dashboard & video classes (YouTube)
-- The student dashboard lives at `/dashboard` and is only accessible to approved users.
-- Video classes now embed YouTube. Store the full YouTube URL in `lessons.playback_id` (e.g., `https://www.youtube.com/watch?v=VIDEO_ID` or `https://youtu.be/VIDEO_ID`).
-- Lesson completion is stored per user in the `lesson_progress` table. Because YouTube iframes don't reliably emit an "ended" event, students can mark completion via the "Mark completed" button under the player.
+### Storage buckets
+- `payment-proofs` (private) — uploads during signup.
+- `study-materials` (private) — files shown with signed URLs.
 
-### 6) Admin content management (YouTube + Supabase)
-- Categories: create/edit/delete (deletes blocked if lessons/materials exist).
-- Videos: add a YouTube URL, plus title/description, linked to a category. The URL is stored in `lessons.playback_id`.
-- Materials: upload files (PDF/DOCX/ZIP, etc.) to the private `study-materials` bucket and link to a category.
+### Usage notes
+- Lessons: store full YouTube URL in `lessons.playback_id`.
+- Mock tests: create tests/questions at `/admin/mock-tests`; students take them on `/dashboard` and can review answers after submitting.
+- RLS: keep writes through server actions (service role); students only read their data.
 
-### 5) Admin dashboard
-- Go to `/admin` (protected by JWT + admin email allowlist).
-- View registrants, open signed URLs for payment proofs, and approve/reject users. Only **approved** users can log in successfully.
+### Scripts
+- `npm run dev` — local dev
+- `npm run lint` — ESLint
+- `npm run build` / `npm start` — production build & serve
 
-### Notes
-- Passwords are hashed with `bcryptjs`. Auth tokens are JWTs signed with `AUTH_SECRET` and stored in HTTP-only cookies.
-- Payment proofs are uploaded via server actions using the Supabase service role key; proofs remain private and are exposed only through short-lived signed URLs for admins.
+### Tech
+- Next.js 16 (App Router), TypeScript, Tailwind, Supabase JS, JWT auth, server actions, Plyr for media.

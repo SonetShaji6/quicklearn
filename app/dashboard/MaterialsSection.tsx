@@ -7,6 +7,7 @@ type BaseMaterial = {
   category_id: string;
   title: string;
   description: string | null;
+  file_path?: string;
   mime_type: string | null;
   size_bytes: number | null;
   signedUrl: string | null;
@@ -26,16 +27,19 @@ type PreviewState = {
   material: MaterialWithSignedUrl;
   kind: PreviewKind;
   previewUrl: string | null;
+  externalUrl: string | null;
 } | null;
 
-function humanFileType(mime: string | null) {
-  if (!mime) return "File";
-  if (mime.includes("pdf")) return "PDF";
-  if (mime.includes("word")) return "DOC";
-  if (mime.includes("msword") || mime.includes("officedocument")) return "DOC";
-  if (mime.includes("zip")) return "ZIP";
-  if (mime.includes("image")) return "Image";
-  return mime.toUpperCase();
+function humanFileType(mime: string | null, filePath?: string) {
+  const lowerMime = mime?.toLowerCase() ?? "";
+  const ext = filePath?.split(".").pop()?.toLowerCase();
+  if (lowerMime.includes("pdf") || ext === "pdf") return "PDF";
+  if (lowerMime.includes("word") || lowerMime.includes("msword") || lowerMime.includes("officedocument") || ext === "doc" || ext === "docx") return "DOC";
+  if (lowerMime.includes("zip") || ext === "zip") return "ZIP";
+  if (lowerMime.includes("image") || ["png", "jpg", "jpeg", "gif", "webp"].includes(ext ?? "")) return "Image";
+  if (ext) return ext.toUpperCase();
+  if (lowerMime) return lowerMime.toUpperCase();
+  return "File";
 }
 
 function formatBytes(bytes: number | null) {
@@ -47,10 +51,11 @@ function formatBytes(bytes: number | null) {
   return `${mb.toFixed(1)} MB`;
 }
 
-function getPreviewKind(mime: string | null): PreviewKind {
-  if (!mime) return "unsupported";
-  if (mime.includes("pdf")) return "pdf";
-  if (mime.includes("msword") || mime.includes("wordprocessingml")) return "doc";
+function getPreviewKind(mime: string | null, filePath?: string): PreviewKind {
+  const lowerMime = mime?.toLowerCase() ?? "";
+  const ext = filePath?.split(".").pop()?.toLowerCase();
+  if (lowerMime.includes("pdf") || ext === "pdf") return "pdf";
+  if (lowerMime.includes("msword") || lowerMime.includes("wordprocessingml") || ext === "doc" || ext === "docx") return "doc";
   return "unsupported";
 }
 
@@ -62,16 +67,26 @@ export default function MaterialsSection({ sections }: { sections: MaterialSecti
   const activeSection = normalizedSections.find((s) => s.id === activeSectionId) ?? normalizedSections[0];
 
   const openPreview = (material: MaterialWithSignedUrl) => {
-    const kind = getPreviewKind(material.mime_type);
+    const kind = getPreviewKind(material.mime_type, material.file_path);
     if (!material.signedUrl) {
-      setPreview({ material, kind: "unsupported", previewUrl: null });
+      setPreview({ material, kind: "unsupported", previewUrl: null, externalUrl: null });
       return;
     }
-    let previewUrl: string | null = material.signedUrl;
-    if (kind === "doc") {
-      previewUrl = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(material.signedUrl)}`;
+    const isMobile = typeof window !== "undefined" && /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  let previewUrl: string | null = null;
+  const externalUrl: string | null = material.signedUrl;
+
+    // On mobile, many browsers block or force-download iframes; prefer opening in a new tab there.
+    if (!isMobile) {
+      if (kind === "pdf") {
+        previewUrl = material.signedUrl;
+      }
+      if (kind === "doc") {
+        previewUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(material.signedUrl)}`;
+      }
     }
-    setPreview({ material, kind, previewUrl });
+
+    setPreview({ material, kind, previewUrl, externalUrl });
   };
 
   return (
@@ -119,7 +134,7 @@ export default function MaterialsSection({ sections }: { sections: MaterialSecti
                       <p className="text-base font-semibold text-slate-900 leading-tight break-words">{mat.title}</p>
                       {mat.description && <p className="text-xs text-slate-600 line-clamp-2">{mat.description}</p>}
                     </div>
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700">{humanFileType(mat.mime_type)}</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700">{humanFileType(mat.mime_type, mat.file_path)}</span>
                   </div>
                   <div className="text-[11px] text-slate-500">
                     {formatBytes(mat.size_bytes)}
@@ -160,36 +175,45 @@ export default function MaterialsSection({ sections }: { sections: MaterialSecti
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
             <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">{preview.material.title}</p>
-                <p className="text-xs text-slate-500">{humanFileType(preview.material.mime_type)}</p>
+              <div className="flex flex-1 items-start gap-3">
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-900">{preview.material.title}</p>
+                  <p className="text-xs text-slate-500">{humanFileType(preview.material.mime_type, preview.material.file_path)}</p>
+                </div>
+                {preview.externalUrl ? (
+                  <a
+                    href={preview.externalUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100"
+                  >
+                    Open in new tab
+                  </a>
+                ) : null}
+                <button
+                  onClick={() => setPreview(null)}
+                  className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100"
+                  aria-label="Close preview"
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={() => setPreview(null)}
-                className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100"
-                aria-label="Close preview"
-              >
-                ✕
-              </button>
             </div>
 
             <div className="max-h-[75vh] overflow-hidden">
-              {preview.kind === "pdf" && preview.previewUrl ? (
-                <iframe title="PDF preview" src={preview.previewUrl} className="h-[75vh] w-full" />
-              ) : preview.kind === "doc" && preview.previewUrl ? (
-                <iframe title="Document preview" src={preview.previewUrl} className="h-[75vh] w-full" />
+              {preview.previewUrl ? (
+                <iframe title="File preview" src={preview.previewUrl} className="h-[75vh] w-full" />
               ) : (
                 <div className="flex h-[40vh] flex-col items-center justify-center gap-3 p-6 text-sm text-slate-600">
-                  <p>Preview not available for this file type.</p>
-                  {preview.material.signedUrl ? (
+                  <p>Preview not available in-app on this device.</p>
+                  {preview.externalUrl ? (
                     <a
-                      href={preview.material.signedUrl}
+                      href={preview.externalUrl}
                       target="_blank"
                       rel="noreferrer"
-                      download
                       className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
                     >
-                      Download file
+                      Open file
                     </a>
                   ) : (
                     <p className="text-xs text-rose-600">File link unavailable.</p>

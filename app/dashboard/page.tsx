@@ -5,6 +5,7 @@ import { assertSupabaseAdmin } from "@/lib/supabaseClient";
 import { DashboardNav } from "./NavBar";
 import { VideoClasses } from "./VideoClasses";
 import MaterialsSection, { MaterialSection } from "./MaterialsSection";
+import MockTestsSection, { MockAttempt, MockTest } from "./MockTestsSection";
 
 export const metadata = {
   title: "QuickLearn | Dashboard",
@@ -26,6 +27,24 @@ type MaterialRow = {
   file_path: string;
   mime_type: string | null;
   size_bytes: number | null;
+};
+
+type MockTestRow = {
+  id: string;
+  title: string;
+  category_id: string;
+  duration_minutes: number;
+  start_at: string;
+  category: { name: string } | null;
+  questions: Array<{
+    id: string;
+    text: string;
+    option_a: string;
+    option_b: string;
+    option_c: string;
+    option_d: string;
+    correct_index: number;
+  }>;
 };
 
 const fallbackMaterialCategories: Array<Pick<CategoryWithLessons, "id" | "name" | "description" | "lessons">> = [
@@ -115,7 +134,36 @@ export default async function DashboardPage() {
     materials: materialsByCategory.get(cat.id) ?? [],
   }));
 
-  const mockTestCategories = categories.length ? categories : fallbackMaterialCategories;
+  const { data: mockTestsRaw } = await supabase
+    .from("mock_tests")
+    .select(
+      "id,title,category_id,duration_minutes,start_at,category:categories(name),questions:mock_questions(id,text,option_a,option_b,option_c,option_d,correct_index)"
+    )
+    .order("start_at", { ascending: false });
+
+  const mockTests: MockTest[] = ((mockTestsRaw ?? []) as MockTestRow[]).map((t) => ({
+    id: t.id,
+    title: t.title,
+    category_name: t.category?.name ?? "",
+    duration_minutes: t.duration_minutes,
+    start_at: t.start_at,
+    questions: (t.questions ?? []).map((q) => ({
+      id: q.id,
+      text: q.text,
+      option_a: q.option_a,
+      option_b: q.option_b,
+      option_c: q.option_c,
+      option_d: q.option_d,
+      correct_index: q.correct_index,
+    })),
+  }));
+
+  const { data: mockAttemptsRaw } = await supabase
+    .from("mock_attempts")
+    .select("test_id,answers,score,total")
+    .eq("user_id", payload.userId);
+
+  const mockAttempts = (mockAttemptsRaw ?? []) as MockAttempt[];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900">
@@ -200,20 +248,7 @@ export default async function DashboardPage() {
           <MaterialsSection sections={materialSections} />
         </section>
 
-        <section className="space-y-4" id="mocktests">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Mock Test</p>
-            <p className="text-sm text-slate-600">Practice modules are coming soon.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {mockTestCategories.map((cat) => (
-              <div key={cat.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-sm font-semibold text-slate-900">{cat.name}</p>
-                <p className="mt-2 text-xs text-slate-600">Mock tests will be added soon.</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        <MockTestsSection tests={mockTests} attempts={mockAttempts} />
       </main>
     </div>
   );

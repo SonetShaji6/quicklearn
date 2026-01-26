@@ -128,12 +128,20 @@ export default async function AdminPage() {
           <h1 className="text-3xl font-bold tracking-tight">Registrations & payment verification</h1>
           <p className="text-sm text-slate-600">Approve only after validating the uploaded payment proof.</p>
         </div>
-        <Link
-          href="/"
-          className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-100 hover:bg-indigo-50/60 hover:text-indigo-700"
-        >
-          Back to site
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/mock-tests"
+            className="rounded-full border border-indigo-100 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:border-indigo-200 hover:bg-indigo-100"
+          >
+            Mock tests
+          </Link>
+          <Link
+            href="/"
+            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-100 hover:bg-indigo-50/60 hover:text-indigo-700"
+          >
+            Back to site
+          </Link>
+        </div>
       </div>
 
       <div className="mx-auto mt-8 max-w-6xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-indigo-50">

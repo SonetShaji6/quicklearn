@@ -2,112 +2,137 @@ import Link from "next/link";
 import { SignupForm } from "./SignupForm";
 
 const benefits = [
-  "Fast 3-step registration tailored for MCA LBS learners.",
-  "Secure login with protected progress and quiz history.",
-  "Instant access to crash-course videos, PDFs, and quizzes.",
-  "Dashboard that highlights weak areas and tracks streaks.",
+	"Fast 3-step registration tailored for MCA LBS learners.",
+	"Secure login with protected progress and quiz history.",
+	"Instant access to crash-course videos, PDFs, and quizzes.",
+	"Dashboard that highlights weak areas and tracks streaks.",
 ];
 
 export const metadata = {
-  title: "QuickLearn | Sign Up",
-  description: "Create your QuickLearn account for MCA LBS crash course videos, quizzes, and progress tracking.",
+	title: "QuickLearn | Sign Up",
+	description:
+		"Create your QuickLearn account for MCA LBS crash course videos, quizzes, and progress tracking.",
 };
 
 export default function SignupPage() {
-  return (
-    <div className="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(79,70,229,0.08),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(14,165,233,0.08),transparent_32%),radial-gradient(circle_at_50%_70%,rgba(16,185,129,0.08),transparent_28%)]" />
-<header className="sticky top-0 z-20 border-b border-slate-200/60 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-lg font-semibold text-white shadow-md shadow-indigo-200">
-              QL
-            </span>
-            <div className="leading-tight">
-              <p className="text-lg font-semibold">QuickLearn</p>
-              <p className="text-xs text-slate-500">Your Smart MCA LBS Crash Course Companion</p>
-            </div>
-          </div>
-
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-700 md:flex">
-            <Link href="/#home" className="transition hover:text-indigo-600">Home</Link>
-            <Link href="/#about" className="transition hover:text-indigo-600">About</Link>
-            <Link href="/#course" className="transition hover:text-indigo-600">Course</Link>
-            <Link href="/login" className="transition hover:text-indigo-600">Login</Link>
-            <Link href="/signup" className="transition hover:text-indigo-600">Sign Up</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="hidden rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-100 hover:bg-indigo-50/60 hover:text-indigo-700 md:inline-flex"
+	return (
+		<div className="min-h-screen bg-slate-50 selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden relative dark:bg-slate-950">
+            <Link 
+                href="/" 
+                className="absolute top-4 left-4 md:top-8 md:left-8 z-20 flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-white/50 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-slate-800/50"
             >
-              Login
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Back to Home
             </Link>
-            <Link
-              href="/signup"
-              className="inline-flex rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-700"
-            >
-              Sign Up
-            </Link>
-          </div>
-        </div>
 
-        <div className="block border-t border-slate-200/70 bg-white/80 px-6 pb-3 pt-2 md:hidden">
-          <nav className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-700">
-            <Link href="/#home" className="transition hover:text-indigo-600">Home</Link>
-            <Link href="/#about" className="transition hover:text-indigo-600">About</Link>
-            <Link href="/#course" className="transition hover:text-indigo-600">Course</Link>
-            <Link href="/login" className="transition hover:text-indigo-600">Login</Link>
-            <Link href="/signup" className="transition hover:text-indigo-600">Sign Up</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="relative mx-auto flex max-w-5xl flex-col gap-10 px-6 py-12 sm:py-16">
-        
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
-          <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm">
-              Create your MCA LBS account
-            </div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Register for QuickLearn and unlock the MCA LBS crash course toolkit.
-            </h1>
-            <p className="text-lg leading-relaxed text-slate-600">
-              Join in minutes to access concise video lessons, downloadable PDFs, timed quizzes with instant results, and a progress dashboard that keeps you on pace for exam day.
-            </p>
-            <ul className="space-y-3 text-sm text-slate-700">
-              {benefits.map((item) => (
-                <li key={item} className="flex gap-3">
-                  <span className="mt-1 text-emerald-600">●</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-600 shadow-sm">
-              Already have an account? <Link className="font-semibold text-indigo-700 hover:text-indigo-800" href="/login">Login here</Link> to jump back into your dashboard.
-            </div>
+			<div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50/50 via-white to-white dark:from-slate-900/50 dark:via-slate-950 dark:to-slate-950"></div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-              <p className="text-sm font-semibold text-indigo-700">Payment information</p>
-              <ul className="mt-2 space-y-2 text-sm text-slate-700">
-                <li>Course Fee: <span className="font-semibold text-slate-900">₹4,999</span></li>
-                <li>Payment Method: <span className="font-semibold text-slate-900">UPI / Bank Transfer</span></li>
-                <li>
-                  Note: Please complete the payment for the MCA LBS Crash Course and upload the payment screenshot below for verification.
-                </li>
-              </ul>
-            </div>
-          </div>
+			<div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-20">
+				<div className="flex justify-center lg:justify-start mb-10">
+					<Link href="/" className="inline-flex items-center gap-2 group">
+						<span className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-lg font-bold shadow-indigo-200 shadow-lg group-hover:scale-110 transition-transform dark:shadow-indigo-900/20">
+							QL
+						</span>
+						<span className="text-2xl font-bold text-slate-900 tracking-tight dark:text-slate-100">
+							QuickLearn
+						</span>
+					</Link>
+				</div>
 
-          <div className="space-y-4">
-            <SignupForm />
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-xs text-slate-500 shadow-sm">
-              We store your payment proof privately. Your account will be activated after an admin reviews and approves the payment.
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+				<div className="grid gap-12 lg:grid-cols-2 items-start">
+					{/* Left Column: Context & Payments */}
+					<div className="space-y-8 animate-fade-in-up order-2 lg:order-1">
+						<div>
+							<h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-4 dark:text-slate-100">
+								Join the crash course & start mastering the syllabus.
+							</h1>
+							<p className="text-lg text-slate-600 leading-relaxed dark:text-slate-400">
+								Get access to concise video lessons, downloadable PDFs, and timed
+								quizzes designed to help you ace the MCA LBS exam.
+							</p>
+						</div>
+
+						<ul className="space-y-3">
+							{benefits.map((item, i) => (
+								<li
+									key={i}
+									className="flex items-start gap-3 text-slate-700 dark:text-slate-300"
+								>
+									<svg
+										className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2.5}
+											d="M5 13l4 4L19 7"
+										/>
+									</svg>
+									<span className="text-sm font-medium">{item}</span>
+								</li>
+							))}
+						</ul>
+
+						<div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm ring-1 ring-indigo-50 dark:bg-slate-900 dark:border-slate-800 dark:ring-slate-800">
+							<h3 className="text-base font-semibold text-slate-900 flex items-center gap-2 mb-4 dark:text-slate-100">
+								<span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+									<svg
+										className="h-5 w-5"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+										/>
+									</svg>
+								</span>
+								Payment Information
+							</h3>
+							<div className="space-y-3 text-sm">
+								<div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-800">
+									<span className="text-slate-500 dark:text-slate-400">Course Fee</span>
+									<span className="font-bold text-slate-900 text-base dark:text-white">
+										₹4,999
+									</span>
+								</div>
+								<div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-800">
+									<span className="text-slate-500 dark:text-slate-400">Method</span>
+									<span className="font-medium text-slate-900 dark:text-slate-200">
+										UPI / Bank Transfer
+									</span>
+								</div>
+								<p className="text-xs text-slate-500 leading-relaxed pt-2 dark:text-slate-400">
+									You&apos;ll be asked to upload payment proof during signup.
+									Admin verification takes 1-24 hours.
+								</p>
+							</div>
+						</div>
+					</div>
+
+					{/* Right Column: Form */}
+					<div className="animate-fade-in-up order-1 lg:order-2 space-y-6">
+						<SignupForm />
+						<div className="text-center">
+							<p className="text-sm text-slate-500 dark:text-slate-400">
+								Already have an account?{" "}
+								<Link
+									href="/login"
+									className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
+								>
+									Log in
+								</Link>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 }

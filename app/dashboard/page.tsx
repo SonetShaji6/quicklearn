@@ -110,15 +110,27 @@ export default async function DashboardPage() {
 
   const materials = (materialsRaw as MaterialRow[] | null) ?? [];
 
-  const materialsWithUrls = await Promise.all(
-    materials.map(async (mat) => {
-      const { data } = await supabase.storage.from("study-materials").createSignedUrl(mat.file_path, 60 * 60);
-      return {
-        ...mat,
-        signedUrl: data?.signedUrl ?? null,
-      } as MaterialRow & { signedUrl: string | null };
-    })
-  );
+  const filePaths = materials.map((m) => m.file_path);
+  const fileMap = new Map<string, string>();
+
+  if (filePaths.length > 0) {
+    const { data: signedData } = await supabase.storage
+      .from("study-materials")
+      .createSignedUrls(filePaths, 60 * 60);
+
+    if (signedData) {
+      signedData.forEach((item: { path: string | null; signedUrl: string }) => {
+        if (item.path && item.signedUrl) {
+          fileMap.set(item.path, item.signedUrl);
+        }
+      });
+    }
+  }
+
+  const materialsWithUrls = materials.map((mat) => ({
+    ...mat,
+    signedUrl: fileMap.get(mat.file_path) ?? null,
+  })) as (MaterialRow & { signedUrl: string | null })[];
 
   const materialsByCategory = new Map<string, Array<MaterialRow & { signedUrl: string | null }>>();
   for (const mat of materialsWithUrls) {
@@ -141,7 +153,7 @@ export default async function DashboardPage() {
     )
     .order("start_at", { ascending: false });
 
-  const mockTests: MockTest[] = ((mockTestsRaw ?? []) as MockTestRow[]).map((t) => ({
+  const mockTests: MockTest[] = ((mockTestsRaw ?? []) as unknown as MockTestRow[]).map((t) => ({
     id: t.id,
     title: t.title,
     category_name: t.category?.name ?? "",
@@ -166,69 +178,69 @@ export default async function DashboardPage() {
   const mockAttempts = (mockAttemptsRaw ?? []) as MockAttempt[];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <DashboardNav />
 
       <main className="mx-auto max-w-6xl space-y-10 px-4 pb-16 pt-8 sm:px-6" id="overview">
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-indigo-50">
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Student overview</p>
-            <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user.name || payload.email}</h1>
-            <div className="grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Name</p>
-                <p className="text-sm font-semibold text-slate-900">{user.name}</p>
+          <div className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-indigo-900/10">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600 dark:text-indigo-400">Student overview</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Welcome back, {user.name || payload.email}</h1>
+            <div className="grid gap-3 text-sm text-slate-700 sm:grid-cols-2 dark:text-slate-300">
+              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Name</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user.name}</p>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">College</p>
-                <p className="text-sm font-semibold text-slate-900">{user.college}</p>
+              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">College</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user.college}</p>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Degree</p>
-                <p className="text-sm font-semibold text-slate-900">{user.degree}</p>
+              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Degree</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user.degree}</p>
               </div>
-              <div className="rounded-2xl bg-emerald-50 p-3">
-                <p className="text-xs uppercase tracking-[0.14em] text-emerald-600">Status</p>
-                <p className="text-sm font-semibold text-emerald-800">Approved</p>
+              <div className="rounded-2xl bg-emerald-50 p-3 dark:bg-emerald-900/10">
+                <p className="text-xs uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">Status</p>
+                <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Approved</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm font-semibold text-slate-800">
+              <div className="flex items-center justify-between text-sm font-semibold text-slate-800 dark:text-slate-200">
                 <span>Overall course progress</span>
                 <span>{progressPct}%</span>
               </div>
-              <div className="h-3 rounded-full bg-slate-100">
+              <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
-                  className="h-full rounded-full bg-indigo-600"
+                  className="h-full rounded-full bg-indigo-600 dark:bg-indigo-500"
                   style={{ width: `${progressPct}%` }}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={progressPct}
                 />
               </div>
-              <p className="text-xs text-slate-500">Progress updates automatically as you finish lessons.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Progress updates automatically as you finish lessons.</p>
             </div>
           </div>
 
-          <div className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-indigo-50">
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Summary</p>
+          <div className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-indigo-900/10">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600 dark:text-indigo-400">Summary</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Total lessons</p>
-                <p className="text-2xl font-bold text-slate-900">{totalLessons}</p>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
+                <p className="text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Total lessons</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalLessons}</p>
               </div>
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-emerald-700">Completed</p>
-                <p className="text-2xl font-bold text-emerald-800">{completedCount}</p>
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 dark:border-emerald-900/30 dark:bg-emerald-900/10">
+                <p className="text-xs uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-400">Completed</p>
+                <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300">{completedCount}</p>
               </div>
-              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-amber-700">Remaining</p>
-                <p className="text-2xl font-bold text-amber-800">{remaining}</p>
+              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 dark:border-amber-900/30 dark:bg-amber-900/10">
+                <p className="text-xs uppercase tracking-[0.12em] text-amber-700 dark:text-amber-400">Remaining</p>
+                <p className="text-2xl font-bold text-amber-800 dark:text-amber-300">{remaining}</p>
               </div>
-              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-                <p className="text-xs uppercase tracking-[0.12em] text-indigo-700">Status</p>
-                <p className="text-sm font-semibold text-indigo-900">Approved student</p>
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10">
+                <p className="text-xs uppercase tracking-[0.12em] text-indigo-700 dark:text-indigo-400">Status</p>
+                <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">Approved student</p>
               </div>
             </div>
           </div>
@@ -237,8 +249,8 @@ export default async function DashboardPage() {
         <section className="space-y-4" id="videos">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600">Video Classes</p>
-              <p className="text-sm text-slate-600">Select a category, pick a lesson, and watch the embedded YouTube video.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600 dark:text-indigo-400">Video Classes</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Select a category, pick a lesson, and watch the embedded YouTube video.</p>
             </div>
           </div>
           <VideoClasses completed={completedIds} categories={categories} />

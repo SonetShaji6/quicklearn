@@ -53,15 +53,30 @@ async function getUsersWithProofUrls() {
 
   const users: UserRow[] = data || [];
 
-  const signedUrls = await Promise.all(
-    users.map(async (u) => {
-      if (!u.payment_proof) return null;
-      const { data: urlData } = await supabase.storage.from("payment-proofs").createSignedUrl(u.payment_proof, 600);
-      return urlData?.signedUrl || null;
-    })
-  );
+  const proofPaths = users
+    .map((u) => u.payment_proof)
+    .filter((p): p is string => typeof p === "string" && p.length > 0);
 
-  return users.map((user, idx) => ({ ...user, signedUrl: signedUrls[idx] }));
+  const pathMap = new Map<string, string>();
+
+  if (proofPaths.length > 0) {
+    const { data: signedData } = await supabase.storage
+      .from("payment-proofs")
+      .createSignedUrls(proofPaths, 600);
+      
+    if (signedData) {
+      signedData.forEach((item: { path: string | null; signedUrl: string }) => {
+        if (item.path && item.signedUrl) {
+          pathMap.set(item.path, item.signedUrl);
+        }
+      });
+    }
+  }
+
+  return users.map((user) => ({
+    ...user,
+    signedUrl: user.payment_proof ? pathMap.get(user.payment_proof) ?? null : null,
+  }));
 }
 
 async function getCategoriesWithCounts(): Promise<CategoryRow[]> {
@@ -77,21 +92,31 @@ async function getCategoriesWithCounts(): Promise<CategoryRow[]> {
   const { data: categories } = await supabase.from("categories").select("id,name,description").order("created_at", { ascending: false });
   const rows = categories || [];
 
-  const counts = await Promise.all(
-    rows.map(async (cat: { id: string; name: string; description?: string | null }) => {
-      const { count: lessonCount } = await supabase.from("lessons").select("id", { count: "exact", head: true }).eq("category_id", cat.id);
-      const { count: materialCount } = await supabase.from("materials").select("id", { count: "exact", head: true }).eq("category_id", cat.id);
-      return {
-        id: cat.id,
-        name: cat.name,
-        description: cat.description ?? null,
-        lesson_count: lessonCount || 0,
-        material_count: materialCount || 0,
-      } satisfies CategoryRow;
-    })
-  );
+  // Optimization: Fetch all relationships in just 2 queries instead of N*2 queries
+  const { data: allLessons } = await supabase.from("lessons").select("category_id");
+  const { data: allMaterials } = await supabase.from("materials").select("category_id");
 
-  return counts;
+  // Count lessons per category in memory
+  const lessonCounts = (allLessons || []).reduce((acc: Record<string, number>, item: { category_id: string }) => {
+    const id = item.category_id;
+    acc[id] = (acc[id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Count materials per category in memory
+  const materialCounts = (allMaterials || []).reduce((acc: Record<string, number>, item: { category_id: string }) => {
+    const id = item.category_id;
+    acc[id] = (acc[id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return rows.map((cat: { id: string; name: string; description?: string | null }) => ({
+    id: cat.id,
+    name: cat.name,
+    description: cat.description ?? null,
+    lesson_count: lessonCounts[cat.id] || 0,
+    material_count: materialCounts[cat.id] || 0,
+  }));
 }
 
 async function getLessons(): Promise<LessonRow[]> {

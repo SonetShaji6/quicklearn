@@ -44,6 +44,7 @@ type MockTestRow = {
     option_c: string;
     option_d: string;
     correct_index: number;
+    created_at: string;
   }>;
 };
 
@@ -159,17 +160,15 @@ export default async function DashboardPage() {
     category_name: t.category?.name ?? "",
     duration_minutes: t.duration_minutes,
     start_at: t.start_at,
-    questions: (t.questions ?? [])
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-      .map((q) => ({
-        id: q.id,
-        text: q.text,
-        option_a: q.option_a,
-        option_b: q.option_b,
-        option_c: q.option_c,
-        option_d: q.option_d,
-        correct_index: q.correct_index,
-      })),
+    questions: (t.questions ?? []).map((q) => ({
+      id: q.id,
+      text: q.text,
+      option_a: q.option_a,
+      option_b: q.option_b,
+      option_c: q.option_c,
+      option_d: q.option_d,
+      correct_index: q.correct_index,
+    })),
   }));
 
   const { data: mockAttemptsRaw } = await supabase

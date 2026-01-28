@@ -93,7 +93,7 @@ export function DashboardNav() {
 
       <div className={clsx(
             "overflow-hidden transition-all duration-300 sm:hidden",
-            menuOpen ? "max-h-64 opacity-100 border-t border-slate-100 shadow-lg dark:border-slate-800" : "max-h-0 opacity-0"
+            menuOpen ? "max-h-[500px] opacity-100 border-t border-slate-100 shadow-lg dark:border-slate-800" : "max-h-0 opacity-0"
       )}>
         <div className="bg-white/80 backdrop-blur-xl px-4 pb-4 pt-2 space-y-1 dark:bg-slate-900/80">
             <div className="flex justify-end pt-2 pb-1">
@@ -118,7 +118,7 @@ export function DashboardNav() {
                 <form action={logoutAction} className="w-full">
                 <button
                     type="submit"
-                    className="w-full text-left rounded-lg px-4 py-3 text-slate-600 transition text-sm font-medium hover:bg-rose-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-rose-900/20 dark:hover:text-rose-400"
+                    className="w-full text-left rounded-lg px-4 py-3 transition text-sm font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20"
                 >
                     Logout
                 </button>

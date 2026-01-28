@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { submitMockAttempt } from "./mockActions";
 
 type Question = {
@@ -45,9 +45,72 @@ export default function MockTestsSection({ tests, attempts }: Props) {
   const [reviewAnswers, setReviewAnswers] = useState<number[]>([]);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
 
+  // Keep track of latest answers for timer-based submission
+  const answersRef = useRef(answers);
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  // Restore active test state from local storage on mount
+  useEffect(() => {
+    const savedTestId = localStorage.getItem("ql_active_test_id");
+    if (savedTestId) {
+      const savedEndTime = localStorage.getItem(`ql_test_endtime_${savedTestId}`);
+      const savedAnswers = localStorage.getItem(`ql_test_answers_${savedTestId}`);
+      const test = tests.find((t) => t.id === savedTestId);
+
+      if (test && savedEndTime) {
+        const end = parseInt(savedEndTime, 10);
+        const now = Date.now();
+        
+        if (now < end) {
+          // Resume test
+          setActiveTest(test);
+          setEndTime(end);
+          setTimeLeft(end - now);
+          if (savedAnswers) {
+            setAnswers(JSON.parse(savedAnswers));
+          } else {
+            setAnswers(Array(test.questions.length).fill(-1));
+          }
+          setStatus("taking");
+        } else {
+           // Test expired while away - could auto-submit here if desired, 
+           // but strictly speaking the attempt wasn't completed in a valid session.
+           // Clean up storage so they don't get stuck.
+           localStorage.removeItem("ql_active_test_id");
+           localStorage.removeItem(`ql_test_endtime_${savedTestId}`);
+           localStorage.removeItem(`ql_test_answers_${savedTestId}`);
+        }
+      }
+    }
+  }, [tests]);
+
+  // Persist answers to local storage
+  useEffect(() => {
+    if (status === "taking" && activeTest) {
+      localStorage.setItem(`ql_test_answers_${activeTest.id}`, JSON.stringify(answers));
+    }
+  }, [answers, status, activeTest]);
+
   useEffect(() => {
     setAttemptMap(new Map(attempts.map((a) => [a.test_id, a])));
   }, [attempts]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (status === "taking") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    if (status === "taking") {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    }
+
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [status]);
 
   useEffect(() => {
     if (!activeTest || status !== "taking" || !endTime) return;
@@ -72,27 +135,44 @@ export default function MockTestsSection({ tests, attempts }: Props) {
   const startTest = (test: MockTest) => {
     if (attemptMap.has(test.id)) return;
     setActiveTest(test);
-    setAnswers(Array(test.questions.length).fill(-1));
+    const initialAnswers = Array(test.questions.length).fill(-1);
+    setAnswers(initialAnswers);
     setStatus("taking");
     const durationMs = test.duration_minutes * 60 * 1000;
+    const end = Date.now() + durationMs;
     setTimeLeft(durationMs);
-    setEndTime(Date.now() + durationMs);
+    setEndTime(end);
+
+    // Persist start state
+    localStorage.setItem("ql_active_test_id", test.id);
+    localStorage.setItem(`ql_test_endtime_${test.id}`, end.toString());
+    localStorage.setItem(`ql_test_answers_${test.id}`, JSON.stringify(initialAnswers));
   };
 
   const submit = async (test: MockTest, auto = false) => {
     if (!test) return;
+    
+    // Clear persistence immediately to prevent reloading into a finished test
+    localStorage.removeItem("ql_active_test_id");
+    localStorage.removeItem(`ql_test_endtime_${test.id}`);
+    localStorage.removeItem(`ql_test_answers_${test.id}`);
+
     setSubmittingId(test.id);
-    const correct = test.questions.reduce((acc, q, idx) => (answers[idx] === q.correct_index ? acc + 1 : acc), 0);
+    
+    // Use ref to get latest answers even in stale closure (timer)
+    const currentAnswers = answersRef.current;
+    
+    const correct = test.questions.reduce((acc, q, idx) => (currentAnswers[idx] === q.correct_index ? acc + 1 : acc), 0);
     const attempt: MockAttempt = {
       test_id: test.id,
-      answers,
+      answers: currentAnswers,
       score: correct,
       total: test.questions.length,
     };
     setAttemptMap((prev) => new Map(prev).set(test.id, attempt));
     setStatus("submitted");
     setActiveTest(null);
-    await submitMockAttempt(test.id, answers);
+    await submitMockAttempt(test.id, currentAnswers);
     setSubmittingId(null);
     if (auto) {
       alert("Time is up. Your answers were submitted automatically.");

@@ -149,7 +149,7 @@ export default async function DashboardPage() {
   const { data: mockTestsRaw } = await supabase
     .from("mock_tests")
     .select(
-      "id,title,category_id,duration_minutes,start_at,category:categories(name),questions:mock_questions(id,text,option_a,option_b,option_c,option_d,correct_index)"
+      "id,title,category_id,duration_minutes,start_at,category:categories(name),questions:mock_questions(id,text,option_a,option_b,option_c,option_d,correct_index,created_at)"
     )
     .order("start_at", { ascending: false });
 
@@ -159,15 +159,17 @@ export default async function DashboardPage() {
     category_name: t.category?.name ?? "",
     duration_minutes: t.duration_minutes,
     start_at: t.start_at,
-    questions: (t.questions ?? []).map((q) => ({
-      id: q.id,
-      text: q.text,
-      option_a: q.option_a,
-      option_b: q.option_b,
-      option_c: q.option_c,
-      option_d: q.option_d,
-      correct_index: q.correct_index,
-    })),
+    questions: (t.questions ?? [])
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      .map((q) => ({
+        id: q.id,
+        text: q.text,
+        option_a: q.option_a,
+        option_b: q.option_b,
+        option_c: q.option_c,
+        option_d: q.option_d,
+        correct_index: q.correct_index,
+      })),
   }));
 
   const { data: mockAttemptsRaw } = await supabase

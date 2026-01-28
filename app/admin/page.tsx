@@ -155,6 +155,12 @@ export default async function AdminPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/admin/users"
+            className="rounded-full border border-indigo-100 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:border-indigo-200 hover:bg-indigo-100"
+          >
+            User Management
+          </Link>
+          <Link
             href="/admin/mock-tests"
             className="rounded-full border border-indigo-100 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:border-indigo-200 hover:bg-indigo-100"
           >

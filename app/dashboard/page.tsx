@@ -179,88 +179,89 @@ export default async function DashboardPage() {
   const mockAttempts = (mockAttemptsRaw ?? []) as MockAttempt[];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-screen bg-[var(--background)]">
       <DashboardNav />
 
       <main className="mx-auto max-w-6xl space-y-10 px-4 pb-16 pt-8 sm:px-6" id="overview">
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-indigo-900/10">
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600 dark:text-indigo-400">Student overview</p>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Welcome back, {user.name || payload.email}</h1>
-            <div className="grid gap-3 text-sm text-slate-700 sm:grid-cols-2 dark:text-slate-300">
-              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Name</p>
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user.name}</p>
+        {/* ── Overview Section ───────────────────────────────── */}
+        <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+          {/* Welcome Card */}
+          <div className="ql-card-static p-6 space-y-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="section-label mb-2">Student Overview</p>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[var(--text-primary)]">
+                  Welcome back, {user.name || payload.email}
+                </h1>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">College</p>
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user.college}</p>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Degree</p>
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user.degree}</p>
-              </div>
-              <div className="rounded-2xl bg-emerald-50 p-3 dark:bg-emerald-900/10">
-                <p className="text-xs uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">Status</p>
-                <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Approved</p>
-              </div>
+              <span className="badge badge-success">Approved</span>
+            </div>
+
+            <div className="grid gap-3 text-sm sm:grid-cols-3">
+              {[
+                { label: "Name", value: user.name },
+                { label: "College", value: user.college },
+                { label: "Degree", value: user.degree },
+              ].map((item) => (
+                <div key={item.label} className="rounded-[var(--radius-md)] bg-[var(--surface-secondary)] p-3 border border-[var(--border-subtle)]">
+                  <p className="text-[10px] uppercase tracking-widest font-semibold text-[var(--text-muted)] mb-0.5">{item.label}</p>
+                  <p className="text-sm font-bold text-[var(--text-primary)] truncate">{item.value}</p>
+                </div>
+              ))}
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm font-semibold text-slate-800 dark:text-slate-200">
-                <span>Overall course progress</span>
-                <span>{progressPct}%</span>
+              <div className="flex items-center justify-between text-sm font-semibold">
+                <span className="text-[var(--text-secondary)]">Course Progress</span>
+                <span className="text-[var(--ql-red)] font-black">{progressPct}%</span>
               </div>
-              <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800">
+              <div className="progress-bar">
                 <div
-                  className="h-full rounded-full bg-indigo-600 dark:bg-indigo-500"
+                  className="progress-bar-fill"
                   style={{ width: `${progressPct}%` }}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={progressPct}
                 />
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Progress updates automatically as you finish lessons.</p>
+              <p className="text-[11px] text-[var(--text-muted)]">Progress updates automatically as you finish lessons.</p>
             </div>
           </div>
 
-          <div className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-indigo-900/10">
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600 dark:text-indigo-400">Summary</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-                <p className="text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Total lessons</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalLessons}</p>
-              </div>
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 dark:border-emerald-900/30 dark:bg-emerald-900/10">
-                <p className="text-xs uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-400">Completed</p>
-                <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300">{completedCount}</p>
-              </div>
-              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 dark:border-amber-900/30 dark:bg-amber-900/10">
-                <p className="text-xs uppercase tracking-[0.12em] text-amber-700 dark:text-amber-400">Remaining</p>
-                <p className="text-2xl font-bold text-amber-800 dark:text-amber-300">{remaining}</p>
-              </div>
-              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10">
-                <p className="text-xs uppercase tracking-[0.12em] text-indigo-700 dark:text-indigo-400">Status</p>
-                <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">Approved student</p>
-              </div>
+          {/* Stats Card */}
+          <div className="ql-card-static p-6 space-y-4">
+            <p className="section-label">Summary</p>
+            <div className="grid gap-3 grid-cols-2">
+              {[
+                { label: "Total Lessons", value: totalLessons, color: "var(--text-primary)" },
+                { label: "Completed", value: completedCount, color: "var(--success)" },
+                { label: "Remaining", value: remaining, color: "var(--warning)" },
+                { label: "Progress", value: `${progressPct}%`, color: "var(--ql-red)" },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-secondary)] p-4 text-center">
+                  <p className="text-2xl font-black" style={{ color: stat.color }}>{stat.value}</p>
+                  <p className="text-[10px] uppercase tracking-widest font-semibold text-[var(--text-muted)] mt-1">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
+        {/* ── Video Classes Section ──────────────────────────── */}
         <section className="space-y-4" id="videos">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-indigo-600 dark:text-indigo-400">Video Classes</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Select a category, pick a lesson, and watch the embedded YouTube video.</p>
-            </div>
+          <div>
+            <p className="section-label mb-1">Video Classes</p>
+            <p className="text-sm text-[var(--text-muted)]">Select a category, pick a lesson, and watch the embedded video.</p>
           </div>
           <VideoClasses completed={completedIds} categories={categories} />
         </section>
 
+        {/* ── Materials Section ───────────────────────────────── */}
         <section className="space-y-4" id="materials">
           <MaterialsSection sections={materialSections} />
         </section>
 
+        {/* ── Mock Tests Section ──────────────────────────────── */}
         <MockTestsSection tests={mockTests} attempts={mockAttempts} />
       </main>
     </div>

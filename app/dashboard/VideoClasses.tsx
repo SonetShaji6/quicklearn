@@ -46,9 +46,10 @@ export function VideoClasses({ completed, categories }: { completed: string[]; c
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]" id="videos">
-      <div className="space-y-6">
-        <div className="flex flex-wrap gap-2 pb-2">
+    <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]" id="videos">
+      <div className="space-y-4">
+        {/* Category pills */}
+        <div className="flex flex-wrap gap-2">
           {categories.map((cat) => (
             <button
               key={cat.id}
@@ -57,10 +58,10 @@ export function VideoClasses({ completed, categories }: { completed: string[]; c
                 setSelectedLesson(cat.lessons?.[0] ?? null);
               }}
               className={clsx(
-                "rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 ease-out",
-                categoryId === cat.id 
-                    ? "border-indigo-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:border-indigo-500 dark:bg-indigo-600 dark:shadow-indigo-900/50" 
-                    : "border-slate-200 bg-white text-slate-600 hover:border-indigo-200 hover:text-indigo-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
+                "rounded-[var(--radius)] border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200",
+                categoryId === cat.id
+                  ? "border-[var(--ql-red)] bg-[var(--ql-red)] text-white shadow-[var(--shadow-red)]"
+                  : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--ql-red)] hover:text-[var(--ql-red)]"
               )}
             >
               {cat.name}
@@ -68,110 +69,117 @@ export function VideoClasses({ completed, categories }: { completed: string[]; c
           ))}
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-900/5 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800">
+        {/* Video Player */}
+        <div className="ql-card-static overflow-hidden">
           {selectedLesson ? (
-            <div className="relative bg-slate-900 aspect-video">
-                <PlyrEmbed
+            <div className="relative bg-[var(--foreground)] aspect-video">
+              <PlyrEmbed
                 playbackId={selectedLesson.playback_id}
                 title={selectedLesson.title}
                 onMarkComplete={() => handleCompleted(selectedLesson)}
-                />
+              />
             </div>
           ) : (
-            <div className="flex h-64 md:h-96 items-center justify-center text-sm text-slate-500 bg-slate-50 dark:bg-slate-800/50 dark:text-slate-400">
-                <div className="text-center">
-                    <span className="text-4xl block mb-2">📺</span>
-                    Select a lesson to start watching
+            <div className="flex h-64 md:h-96 items-center justify-center text-sm text-[var(--text-muted)] bg-[var(--surface-secondary)]">
+              <div className="text-center space-y-2">
+                <div className="w-12 h-12 rounded-[var(--radius-lg)] bg-[var(--accent-light)] text-[var(--ql-red)] flex items-center justify-center mx-auto">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
+                <p className="font-medium">Select a lesson to start watching</p>
+              </div>
             </div>
           )}
-          <div className="p-5">
-            <h2 className="text-xl font-bold text-slate-900 mb-2 dark:text-white">
-                {selectedLesson?.title ?? "No Lesson Selected"}
+          <div className="p-5 border-t border-[var(--border)]">
+            <h2 className="text-lg font-bold text-[var(--text-primary)] mb-1">
+              {selectedLesson?.title ?? "No Lesson Selected"}
             </h2>
-            <p className="text-slate-600 text-sm leading-relaxed dark:text-slate-400">
-                {selectedLesson?.description || "No description available for this lesson."}
+            <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+              {selectedLesson?.description || "No description available for this lesson."}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="space-y-4 h-fit">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+      {/* Course content sidebar */}
+      <div className="space-y-3 h-fit">
+        <div className="flex items-center justify-between px-0.5">
+          <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
             Course Content
-            <span className="ml-2 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full dark:bg-slate-800 dark:text-slate-400">
-                {currentCategory?.lessons?.length ?? 0} Limit
-            </span>
+            <span className="badge badge-neutral">{currentCategory?.lessons?.length ?? 0}</span>
           </h3>
           {pending && (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full animate-pulse dark:bg-indigo-900/30 dark:text-indigo-400">
-                <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
-                Saving...
+            <span className="badge badge-red animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--ql-red)]"></span>
+              Saving...
             </span>
           )}
         </div>
-        
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900">
-            <div className="max-h-[600px] overflow-y-auto p-2 space-y-1 custom-scrollbar">
+
+        <div className="ql-card-static overflow-hidden">
+          <div className="max-h-[600px] overflow-y-auto p-2 space-y-1">
             {(currentCategory?.lessons ?? []).length > 0 ? (
-                (currentCategory?.lessons ?? []).map((lesson, index) => {
-                    const isDone = completedSet.has(lesson.id);
-                    const isSelected = selectedLesson?.id === lesson.id;
-                    
-                    return (
-                    <button
-                        key={lesson.id}
-                        onClick={() => handleLessonSelect(lesson)}
-                        className={clsx(
-                        "group w-full rounded-xl p-3 text-left transition-all duration-200 border border-transparent",
-                        isSelected 
-                            ? "bg-indigo-50 border-indigo-100 shadow-sm dark:bg-indigo-900/20 dark:border-indigo-500/30 dark:shadow-indigo-900/10" 
-                            : "hover:bg-slate-50 hover:border-slate-100 dark:hover:bg-slate-800/50 dark:hover:border-slate-700"
+              (currentCategory?.lessons ?? []).map((lesson, index) => {
+                const isDone = completedSet.has(lesson.id);
+                const isSelected = selectedLesson?.id === lesson.id;
+
+                return (
+                  <button
+                    key={lesson.id}
+                    onClick={() => handleLessonSelect(lesson)}
+                    className={clsx(
+                      "group w-full rounded-[var(--radius-md)] p-3 text-left transition-all duration-200 border",
+                      isSelected
+                        ? "bg-[var(--accent-light)] border-[var(--ql-red)]/20 shadow-[var(--shadow-xs)]"
+                        : "border-transparent hover:bg-[var(--surface-secondary)] hover:border-[var(--border)]"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={clsx(
+                        "flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-bold transition-colors",
+                        isDone
+                          ? "bg-[var(--success-light)] text-[var(--success)]"
+                          : isSelected
+                            ? "bg-[var(--ql-red)] text-white"
+                            : "bg-[var(--surface-secondary)] text-[var(--text-muted)] group-hover:bg-[var(--accent-light)] group-hover:text-[var(--ql-red)]"
+                      )}>
+                        {isDone ? (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        ) : (
+                          index + 1
                         )}
-                    >
-                        <div className="flex items-start gap-4">
-                            <div className={clsx(
-                                "flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-colors mt-0.5",
-                                isDone ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : (isSelected ? "bg-indigo-200 text-indigo-700 dark:bg-indigo-600 dark:text-white" : "bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-slate-700 dark:group-hover:text-indigo-400")
-                            )}>
-                                {isDone ? (
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                ) : (
-                                    index + 1
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className={clsx(
-                                    "text-sm font-semibold truncate transition-colors",
-                                    isSelected ? "text-indigo-900 dark:text-indigo-200" : "text-slate-700 group-hover:text-indigo-700 dark:text-slate-300 dark:group-hover:text-indigo-300"
-                                )}>
-                                    {lesson.title}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[10px] uppercase font-medium text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700">
-                                        {lesson.duration || "Video"}
-                                    </span>
-                                </div>
-                            </div>
-                            {isSelected && (
-                                <div className="flex-shrink-0 self-center">
-                                    <span className="flex h-2 w-2 relative">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                                    </span>
-                                </div>
-                            )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={clsx(
+                          "text-sm font-semibold truncate transition-colors",
+                          isSelected ? "text-[var(--ql-red)]" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
+                        )}>
+                          {lesson.title}
+                        </p>
+                        <span className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider">
+                          {lesson.duration || "Video"}
+                        </span>
+                      </div>
+                      {isSelected && (
+                        <div className="flex-shrink-0 self-center">
+                          <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--ql-red)] opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--ql-red)]"></span>
+                          </span>
                         </div>
-                    </button>
-                    );
-                })
+                      )}
+                    </div>
+                  </button>
+                );
+              })
             ) : (
-                <div className="p-8 text-center text-slate-500 text-sm dark:text-slate-400">
-                    No lessons found in this category.
-                </div>
+              <div className="p-8 text-center text-[var(--text-muted)] text-sm">
+                No lessons found in this category.
+              </div>
             )}
-            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -243,11 +251,11 @@ function PlyrEmbed({ playbackId, title, onMarkComplete }: { playbackId: string; 
 
   if (!videoId) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2 bg-slate-50 text-sm text-slate-600">
+      <div className="flex h-64 flex-col items-center justify-center gap-3 bg-[var(--surface-secondary)] text-sm text-[var(--text-secondary)]">
         <p>Invalid YouTube URL for this lesson.</p>
         <button
           onClick={onMarkComplete}
-          className="rounded-full bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700"
+          className="btn-primary text-xs !py-2 !px-4"
         >
           Mark as completed
         </button>
@@ -256,7 +264,7 @@ function PlyrEmbed({ playbackId, title, onMarkComplete }: { playbackId: string; 
   }
 
   if (!mounted || !source) {
-    return <div className="aspect-video w-full bg-slate-100" />;
+    return <div className="aspect-video w-full skeleton" />;
   }
 
   return (
@@ -269,13 +277,13 @@ function PlyrEmbed({ playbackId, title, onMarkComplete }: { playbackId: string; 
           data-plyr-embed-id={videoId}
         />
       </div>
-      <div className="mt-0 flex items-center justify-between border border-t-0 border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-        <span>Watch</span>
+      <div className="flex items-center justify-between border-t border-[var(--border)] bg-[var(--surface-secondary)] px-4 py-2.5 text-xs">
+        <span className="text-[var(--text-muted)] font-medium">Now playing</span>
         <button
           onClick={onMarkComplete}
-          className="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700"
+          className="rounded-[var(--radius)] bg-[var(--success)] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:opacity-90 transition-opacity"
         >
-          Mark completed
+          ✓ Mark completed
         </button>
       </div>
     </div>

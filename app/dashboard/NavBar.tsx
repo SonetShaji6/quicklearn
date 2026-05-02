@@ -5,10 +5,10 @@ import { logoutAction } from "./actions";
 import { ThemeToggle } from "../components/ThemeToggle";
 
 const sections = [
-  { id: "overview", label: "Dashboard" },
-  { id: "videos", label: "Video Classes" },
-  { id: "materials", label: "Study Materials" },
-  { id: "mocktests", label: "Mock Test" },
+  { id: "overview", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+  { id: "videos", label: "Videos", icon: "M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+  { id: "materials", label: "Materials", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
+  { id: "mocktests", label: "Mock Tests", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" },
 ];
 
 function clsx(...args: Array<string | false | null | undefined>) {
@@ -37,53 +37,57 @@ export function DashboardNav() {
   }, []);
 
   return (
-    <div className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-indigo-100 supports-[backdrop-filter]:bg-white/60 dark:bg-slate-900/70 dark:border-slate-800">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white shadow-lg shadow-indigo-500/30">
-            QL
+    <div className="sticky top-0 z-30 glass border-b border-[var(--border)]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6 lg:px-8">
+        {/* Logo */}
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--ql-red)] text-sm font-black text-white shadow-[var(--shadow-red)]">
+            Q
           </span>
           <div className="leading-tight">
-            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">QuickLearn</p>
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-indigo-600 dark:text-indigo-400">Student Dashboard</p>
+            <p className="text-sm font-bold text-[var(--text-primary)]">QuickLearn</p>
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-[var(--ql-red)]">Dashboard</p>
           </div>
         </div>
 
+        {/* Mobile menu toggle */}
         <button
-          className="p-2 text-slate-600 sm:hidden hover:bg-slate-100 rounded-lg transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
+          className="p-2 text-[var(--text-secondary)] sm:hidden hover:bg-[var(--surface-secondary)] rounded-[var(--radius)] transition-colors"
           onClick={() => setMenuOpen((v) => !v)}
           aria-expanded={menuOpen}
           aria-label="Toggle navigation"
           type="button"
         >
-          <span className="sr-only">Menu</span>
-           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} /></svg>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} /></svg>
         </button>
 
-        <div className="hidden items-center gap-1 text-sm font-medium text-slate-600 sm:flex dark:text-slate-300">
-          <div className="flex items-center gap-1 bg-slate-50/50 p-1 rounded-full border border-slate-200/50 dark:bg-slate-800/50 dark:border-slate-700/50">
+        {/* Desktop Nav */}
+        <div className="hidden items-center gap-1 text-sm font-medium sm:flex">
+          <div className="flex items-center gap-0.5 bg-[var(--surface-secondary)] p-1 rounded-[var(--radius-md)] border border-[var(--border-subtle)]">
             {sections.map((item) => (
               <a
                 key={item.id}
                 href={`#${item.id}`}
                 className={clsx(
-                  "rounded-full px-4 py-1.5 transition-all duration-300 ease-out",
-                  active === item.id 
-                      ? "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200 dark:bg-slate-700 dark:text-indigo-400 dark:ring-slate-600" 
-                      : "text-slate-500 hover:text-indigo-600 hover:bg-white/50 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-slate-700/50"
+                  "rounded-[var(--radius)] px-3 py-1.5 transition-all duration-200 ease-out flex items-center gap-1.5 text-xs font-semibold",
+                  active === item.id
+                    ? "bg-[var(--surface)] text-[var(--ql-red)] shadow-[var(--shadow-sm)] border border-[var(--border)]"
+                    : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] border border-transparent"
                 )}
               >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                </svg>
                 {item.label}
               </a>
             ))}
           </div>
-          <div className="mx-3 h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+          <div className="mx-2 h-5 w-px bg-[var(--border)]"></div>
           <ThemeToggle />
-          <div className="mx-1"></div>
           <form action={logoutAction}>
             <button
               type="submit"
-              className="rounded-full px-4 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 border border-transparent hover:border-rose-100 dark:text-rose-400 dark:hover:bg-rose-900/20 dark:hover:border-rose-800"
+              className="ml-1 rounded-[var(--radius)] px-3 py-1.5 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger-light)] border border-transparent hover:border-[var(--danger)]/20"
             >
               Logout
             </button>
@@ -91,39 +95,43 @@ export function DashboardNav() {
         </div>
       </div>
 
+      {/* Mobile Menu */}
       <div className={clsx(
-            "overflow-hidden transition-all duration-300 sm:hidden",
-            menuOpen ? "max-h-[500px] opacity-100 border-t border-slate-100 shadow-lg dark:border-slate-800" : "max-h-0 opacity-0"
+        "overflow-hidden transition-all duration-300 sm:hidden",
+        menuOpen ? "max-h-[500px] opacity-100 border-t border-[var(--border)]" : "max-h-0 opacity-0"
       )}>
-        <div className="bg-white/80 backdrop-blur-xl px-4 pb-4 pt-2 space-y-1 dark:bg-slate-900/80">
-            <div className="flex justify-end pt-2 pb-1">
-                 <ThemeToggle />
-            </div>
-            {sections.map((item) => (
-              <a
-                key={item.id}
-                href={`#${item.id}`}
-                onClick={() => setMenuOpen(false)}
-                className={clsx(
-                  "block rounded-lg px-4 py-3 transition text-sm font-medium",
-                  active === item.id 
-                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400" 
-                    : "text-slate-600 hover:bg-slate-50 hover:text-indigo-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
-                )}
+        <div className="glass px-4 pb-4 pt-2 space-y-1">
+          <div className="flex justify-end pt-1 pb-2">
+            <ThemeToggle />
+          </div>
+          {sections.map((item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              onClick={() => setMenuOpen(false)}
+              className={clsx(
+                "flex items-center gap-2.5 rounded-[var(--radius-md)] px-4 py-3 transition text-sm font-medium",
+                active === item.id
+                  ? "bg-[var(--accent-light)] text-[var(--ql-red)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"
+              )}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+              </svg>
+              {item.label}
+            </a>
+          ))}
+          <div className="pt-2 border-t border-[var(--border)] mt-2">
+            <form action={logoutAction} className="w-full">
+              <button
+                type="submit"
+                className="w-full text-left rounded-[var(--radius-md)] px-4 py-3 transition text-sm font-medium text-[var(--danger)] hover:bg-[var(--danger-light)]"
               >
-                {item.label}
-              </a>
-            ))}
-            <div className="pt-2 border-t border-slate-100 mt-2 dark:border-slate-800">
-                <form action={logoutAction} className="w-full">
-                <button
-                    type="submit"
-                    className="w-full text-left rounded-lg px-4 py-3 transition text-sm font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20"
-                >
-                    Logout
-                </button>
-                </form>
-            </div>
+                Logout
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

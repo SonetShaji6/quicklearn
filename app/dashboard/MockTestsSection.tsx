@@ -75,9 +75,7 @@ export default function MockTestsSection({ tests, attempts }: Props) {
           }
           setStatus("taking");
         } else {
-           // Test expired while away - could auto-submit here if desired, 
-           // but strictly speaking the attempt wasn't completed in a valid session.
-           // Clean up storage so they don't get stuck.
+           // Test expired while away - clean up storage
            localStorage.removeItem("ql_active_test_id");
            localStorage.removeItem(`ql_test_endtime_${savedTestId}`);
            localStorage.removeItem(`ql_test_answers_${savedTestId}`);
@@ -152,14 +150,13 @@ export default function MockTestsSection({ tests, attempts }: Props) {
   const submit = async (test: MockTest, auto = false) => {
     if (!test) return;
     
-    // Clear persistence immediately to prevent reloading into a finished test
+    // Clear persistence immediately
     localStorage.removeItem("ql_active_test_id");
     localStorage.removeItem(`ql_test_endtime_${test.id}`);
     localStorage.removeItem(`ql_test_answers_${test.id}`);
 
     setSubmittingId(test.id);
     
-    // Use ref to get latest answers even in stale closure (timer)
     const currentAnswers = answersRef.current;
     
     const correct = test.questions.reduce((acc, q, idx) => (currentAnswers[idx] === q.correct_index ? acc + 1 : acc), 0);
@@ -193,57 +190,57 @@ export default function MockTestsSection({ tests, attempts }: Props) {
     return `${m}:${s}`;
   };
 
+  const timeWarning = timeLeft < 60000; // Less than 1 minute
+
   return (
-    <div className="space-y-6" id="mocktests">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-sm font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Mock Assessments</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Practice with timed MCQs to test your knowledge.</p>
-        </div>
+    <div className="space-y-5" id="mocktests">
+      <div>
+        <p className="section-label mb-1">Mock Assessments</p>
+        <p className="text-sm text-[var(--text-muted)]">Practice with timed MCQs to test your knowledge.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {availableTests.length === 0 && (
-            <div className="col-span-full py-12 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
-                <span className="text-4xl block mb-2">📝</span>
-                <p className="text-slate-500 font-medium dark:text-slate-400">No mock tests available yet.</p>
+          <div className="col-span-full py-12 text-center rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--border)] bg-[var(--surface-secondary)]">
+            <div className="w-12 h-12 rounded-[var(--radius-lg)] bg-[var(--accent-light)] text-[var(--ql-red)] flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
             </div>
+            <p className="text-[var(--text-muted)] font-medium text-sm">No mock tests available yet.</p>
+          </div>
         )}
         {availableTests.map((t) => {
           const att = attemptMap.get(t.id);
           return (
             <div
               key={t.id}
-              className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-100 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/30 dark:hover:shadow-indigo-900/10"
+              className="group ql-card p-5 flex flex-col"
             >
               <div className="mb-4 flex-1 space-y-2">
                 <div className="flex items-start justify-between">
-                    <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-400/20">
-                        {t.category_name}
-                    </span>
-                    <span className="text-xs text-slate-400 font-mono dark:text-slate-500">
-                        {t.duration_minutes}m
-                    </span>
+                  <span className="badge badge-neutral">{t.category_name}</span>
+                  <span className="text-xs text-[var(--text-muted)] font-mono">{t.duration_minutes}m</span>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors dark:text-slate-100 dark:group-hover:text-indigo-400">
-                    {t.title}
+                <h3 className="text-base font-bold text-[var(--text-primary)] group-hover:text-[var(--ql-red)] transition-colors">
+                  {t.title}
                 </h3>
-                <p className="text-xs text-slate-500 font-medium flex items-center gap-1 dark:text-slate-500">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    {t.questions.length} Questions
+                <p className="text-xs text-[var(--text-muted)] font-medium flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  {t.questions.length} Questions
                 </p>
               </div>
 
-              <div className="mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
+              <div className="mt-auto pt-3 border-t border-[var(--border-subtle)]">
                 {att ? (
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Completed</span>
-                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Score: {att.score}/{att.total}</span>
+                      <span className="badge badge-success mb-1">Completed</span>
+                      <span className="text-sm font-black text-[var(--text-primary)]">Score: {att.score}/{att.total}</span>
                     </div>
                     <button
                       onClick={() => openReview(t)}
-                      className="rounded-xl bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-white hover:text-indigo-600 hover:shadow-sm ring-1 ring-slate-200 transition-all dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:ring-slate-700"
+                      className="btn-secondary !text-xs !py-2 !px-3"
                     >
                       Review
                     </button>
@@ -251,7 +248,7 @@ export default function MockTestsSection({ tests, attempts }: Props) {
                 ) : (
                   <button
                     onClick={() => startTest(t)}
-                    className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 dark:shadow-indigo-900/40"
+                    className="btn-primary w-full !text-sm"
                   >
                     Start Test
                   </button>
@@ -262,26 +259,32 @@ export default function MockTestsSection({ tests, attempts }: Props) {
         })}
       </div>
 
+      {/* ── Test Taking Modal ─────────────────────────────────── */}
       {activeTest && status === "taking" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="relative w-full max-w-4xl h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden ring-1 ring-slate-900/5 dark:bg-slate-900 dark:ring-slate-800">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-white/50 px-6 py-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/80 backdrop-blur-sm p-4 animate-overlay-in">
+          <div className="relative w-full max-w-4xl h-[90vh] flex flex-col ql-card-static overflow-hidden animate-modal-in">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{activeTest.title}</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">{activeTest.title}</h3>
                 <div className="flex items-center gap-2 mt-1">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-bold px-2.5 py-1 rounded-[var(--radius)] ${
+                    timeWarning
+                      ? "bg-[var(--danger-light)] text-[var(--danger)] animate-pulse"
+                      : "bg-[var(--surface-secondary)] text-[var(--text-secondary)]"
+                  }`}>
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${timeWarning ? "bg-[var(--danger)]" : "bg-[var(--ql-red)]"}`}></span>
+                      <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${timeWarning ? "bg-[var(--danger)]" : "bg-[var(--ql-red)]"}`}></span>
                     </span>
-                    <p className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">
-                        {formatTime(timeLeft)} remaining
-                    </p>
+                    {formatTime(timeLeft)}
+                  </span>
                 </div>
               </div>
               <button
                 onClick={() => submit(activeTest)}
                 disabled={!!submittingId}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed dark:shadow-indigo-900/40"
+                className="btn-primary !text-sm"
               >
                 {submittingId ? (
                   <>
@@ -294,129 +297,133 @@ export default function MockTestsSection({ tests, attempts }: Props) {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-slate-950">
-                <div className="max-w-3xl mx-auto space-y-8">
+            {/* Questions */}
+            <div className="flex-1 overflow-y-auto p-6 bg-[var(--surface-secondary)]">
+              <div className="max-w-3xl mx-auto space-y-6">
                 {activeTest.questions.map((q, idx) => (
-                    <div key={q.id} className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
-                    <div className="flex gap-4">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-sm font-bold text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
-                            {idx + 1}
-                        </span>
-                        <div className="flex-1 space-y-4">
-                            <p className="text-base font-medium text-slate-900 leading-relaxed dark:text-slate-100">
-                                {q.text}
-                            </p>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                {[q.option_a, q.option_b, q.option_c, q.option_d].map((opt, optIdx) => (
-                                <label
-                                    key={optIdx}
-                                    className={`relative flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all duration-200 hover:bg-slate-50 ${
-                                    answers[idx] === optIdx 
-                                        ? "border-indigo-600 bg-indigo-50/30 ring-1 ring-indigo-600 shadow-sm dark:border-indigo-500 dark:bg-indigo-900/20" 
-                                        : "border-slate-200 hover:border-indigo-200 dark:border-slate-700 dark:hover:border-indigo-500/50 dark:hover:bg-slate-800"
-                                    }`}
-                                >
-                                    <input
-                                    type="radio"
-                                    name={`q-${q.id}`}
-                                    className="mt-1"
-                                    checked={answers[idx] === optIdx}
-                                    onChange={() =>
-                                        setAnswers((prev) => {
-                                        const next = [...prev];
-                                        next[idx] = optIdx;
-                                        return next;
-                                        })
-                                    }
-                                    />
-                                    <span className="text-sm text-slate-700 font-medium dark:text-slate-300">{opt}</span>
-                                </label>
-                                ))}
-                            </div>
+                  <div key={q.id} className="ql-card-static p-5">
+                    <div className="flex gap-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius)] bg-[var(--accent-light)] text-xs font-bold text-[var(--ql-red)]">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1 space-y-4">
+                        <p className="text-sm font-medium text-[var(--text-primary)] leading-relaxed">
+                          {q.text}
+                        </p>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {[q.option_a, q.option_b, q.option_c, q.option_d].map((opt, optIdx) => (
+                            <label
+                              key={optIdx}
+                              className={`relative flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border p-3.5 transition-all duration-200 ${
+                                answers[idx] === optIdx
+                                  ? "border-[var(--ql-red)] bg-[var(--accent-light)] shadow-[var(--shadow-xs)]"
+                                  : "border-[var(--border)] hover:border-[var(--ql-red)]/50 hover:bg-[var(--surface)]"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name={`q-${q.id}`}
+                                className="mt-0.5 accent-[var(--ql-red)]"
+                                checked={answers[idx] === optIdx}
+                                onChange={() =>
+                                  setAnswers((prev) => {
+                                    const next = [...prev];
+                                    next[idx] = optIdx;
+                                    return next;
+                                  })
+                                }
+                              />
+                              <span className="text-sm text-[var(--text-secondary)] font-medium">{opt}</span>
+                            </label>
+                          ))}
                         </div>
+                      </div>
                     </div>
-                    </div>
+                  </div>
                 ))}
-                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* ── Review Modal ──────────────────────────────────────── */}
       {reviewTest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="relative w-full max-w-4xl h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden ring-1 ring-slate-900/5 dark:bg-slate-900 dark:ring-slate-800">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-white/50 px-6 py-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/80 backdrop-blur-sm p-4 animate-overlay-in">
+          <div className="relative w-full max-w-4xl h-[90vh] flex flex-col ql-card-static overflow-hidden animate-modal-in">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Review: {reviewTest.title}</h3>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Score: <span className="text-indigo-600 font-bold dark:text-indigo-400">{attemptMap.get(reviewTest.id)?.score ?? 0}</span>
-                  <span className="text-slate-300 mx-1 dark:text-slate-600">/</span>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Review: {reviewTest.title}</h3>
+                <p className="text-sm font-medium text-[var(--text-muted)] mt-0.5">
+                  Score: <span className="text-[var(--ql-red)] font-black">{attemptMap.get(reviewTest.id)?.score ?? 0}</span>
+                  <span className="text-[var(--text-muted)] mx-1">/</span>
                   {attemptMap.get(reviewTest.id)?.total ?? reviewTest.questions.length}
                 </p>
               </div>
               <button
                 onClick={() => setReviewTest(null)}
-                className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="btn-secondary !text-xs"
               >
                 Close Review
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-slate-950">
-              <div className="max-w-3xl mx-auto space-y-6">
-              {reviewTest.questions.map((q, idx) => {
-                const userAnswer = reviewAnswers[idx];
-                const correct = q.correct_index;
-                const isCorrect = userAnswer === correct;
-                return (
-                  <div key={q.id} className={`rounded-2xl border bg-white p-6 shadow-sm dark:bg-slate-900 ${isCorrect ? 'border-emerald-100 dark:border-emerald-900/30' : 'border-rose-100 dark:border-rose-900/30'}`}>
-                    <div className="flex gap-4">
-                      <div className="shrink-0">
-                         {isCorrect ? (
-                             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">✓</span>
-                         ) : (
-                             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">✕</span>
-                         )}
-                      </div>
-                      <div className="flex-1 space-y-4">
-                        <div className="flex justify-between">
-                            <p className="text-base font-medium text-slate-900 dark:text-slate-100">{q.text}</p>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full h-fit ${isCorrect ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"}`}>
-                                {isCorrect ? "Correct" : "Incorrect"}
-                            </span>
+            {/* Review Content */}
+            <div className="flex-1 overflow-y-auto p-6 bg-[var(--surface-secondary)]">
+              <div className="max-w-3xl mx-auto space-y-5">
+                {reviewTest.questions.map((q, idx) => {
+                  const userAnswer = reviewAnswers[idx];
+                  const correct = q.correct_index;
+                  const isCorrect = userAnswer === correct;
+                  return (
+                    <div key={q.id} className={`ql-card-static p-5 border-l-4 ${isCorrect ? 'border-l-[var(--success)]' : 'border-l-[var(--danger)]'}`}>
+                      <div className="flex gap-3">
+                        <div className="shrink-0">
+                          {isCorrect ? (
+                            <span className="flex h-7 w-7 items-center justify-center rounded-[var(--radius)] bg-[var(--success-light)] text-[var(--success)] text-xs font-bold">✓</span>
+                          ) : (
+                            <span className="flex h-7 w-7 items-center justify-center rounded-[var(--radius)] bg-[var(--danger-light)] text-[var(--danger)] text-xs font-bold">✕</span>
+                          )}
                         </div>
-                        
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {[q.option_a, q.option_b, q.option_c, q.option_d].map((opt, optIdx) => {
-                            const isUser = userAnswer === optIdx;
-                            const isRight = correct === optIdx;
-                            return (
-                              <div
-                                key={optIdx}
-                                className={`flex items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${
-                                  isRight
-                                    ? "border-emerald-200 bg-emerald-50 text-emerald-900 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300"
-                                    : isUser
-                                      ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300"
-                                      : "border-slate-100 bg-white text-slate-600 opacity-70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
-                                }`}
-                              >
-                                <span className={`font-bold ${isRight ? 'text-emerald-700 dark:text-emerald-400' : (isUser ? 'text-rose-700 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500')}`}>
+                        <div className="flex-1 space-y-3">
+                          <div className="flex justify-between gap-3">
+                            <p className="text-sm font-medium text-[var(--text-primary)]">{q.text}</p>
+                            <span className={`badge shrink-0 h-fit ${isCorrect ? "badge-success" : "badge-red"}`}>
+                              {isCorrect ? "Correct" : "Wrong"}
+                            </span>
+                          </div>
+
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {[q.option_a, q.option_b, q.option_c, q.option_d].map((opt, optIdx) => {
+                              const isUser = userAnswer === optIdx;
+                              const isRight = correct === optIdx;
+                              return (
+                                <div
+                                  key={optIdx}
+                                  className={`flex items-start gap-2.5 rounded-[var(--radius-md)] border p-3 text-sm transition-colors ${
+                                    isRight
+                                      ? "border-[var(--success)]/30 bg-[var(--success-light)] text-[var(--success)]"
+                                      : isUser
+                                        ? "border-[var(--danger)]/30 bg-[var(--danger-light)] text-[var(--danger)]"
+                                        : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] opacity-60"
+                                  }`}
+                                >
+                                  <span className="font-bold text-xs mt-0.5">
                                     {String.fromCharCode(65 + optIdx)}.
-                                </span>
-                                <span>{opt}</span>
-                                {isRight && <span className="ml-auto text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Correct Answer</span>}
-                                {!isRight && isUser && <span className="ml-auto text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400">Your Answer</span>}
-                              </div>
-                            );
-                          })}
+                                  </span>
+                                  <span className="flex-1 font-medium">{opt}</span>
+                                  {isRight && <span className="badge badge-success !text-[9px] shrink-0">Correct</span>}
+                                  {!isRight && isUser && <span className="badge badge-red !text-[9px] shrink-0">Your Pick</span>}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               </div>
             </div>
           </div>

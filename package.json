@@ -32,5 +32,10 @@
     "eslint-config-next": "16.1.4",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@smithy/service-error-classification": "4.0.0"
+    }
   }
 }

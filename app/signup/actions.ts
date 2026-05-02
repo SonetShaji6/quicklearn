@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { assertSupabaseAdmin } from "@/lib/supabaseClient";
 import { hashPassword } from "@/lib/auth";
+import { uploadBlob } from "@/lib/azureStorage";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
@@ -30,17 +31,16 @@ export async function signupAction(formData: FormData) {
 
   const supabase = assertSupabaseAdmin();
 
-  // Upload payment proof to private bucket
+  // Upload payment proof to Azure Blob Storage
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   const extension = file.name.split(".").pop();
-  const filePath = `payment-proofs/${crypto.randomUUID()}.${extension}`;
+  const filePath = `${crypto.randomUUID()}.${extension}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("payment-proofs")
-    .upload(filePath, buffer, { contentType: file.type, upsert: false });
-
-  if (uploadError) {
+  try {
+    await uploadBlob("payment-proofs", filePath, buffer, file.type);
+  } catch (err) {
+    console.error("Azure upload error:", err);
     return { success: false, message: "Upload failed. Please try again." };
   }
 

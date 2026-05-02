@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { assertSupabaseAdmin } from "@/lib/supabaseClient";
+import { getSignedUrl } from "@/lib/azureStorage";
 import { UserManagementClient } from "./UserManagementClient";
 
 export const metadata = {
@@ -27,17 +28,17 @@ async function getAllUsers() {
   const pathMap = new Map<string, string>();
 
   if (proofPaths.length > 0) {
-    const { data: signedData } = await supabase.storage
-      .from("payment-proofs")
-      .createSignedUrls(proofPaths, 3600); // 1 hour validity
-      
-    if (signedData) {
-      signedData.forEach((item: { path: string | null; signedUrl: string }) => {
-        if (item.path && item.signedUrl) {
-          pathMap.set(item.path, item.signedUrl);
+    // Generate SAS URLs for Azure Blob Storage
+    await Promise.all(
+      proofPaths.map(async (path) => {
+        try {
+          const signedUrl = await getSignedUrl("payment-proofs", path, 60); // 1 hour validity
+          pathMap.set(path, signedUrl);
+        } catch (err) {
+          console.error(`Failed to generate SAS url for ${path}:`, err);
         }
-      });
-    }
+      })
+    );
   }
 
   return users.map((u) => ({

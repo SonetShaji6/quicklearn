@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { assertSupabaseAdmin } from "@/lib/supabaseClient";
 import { verifyAuthToken } from "@/lib/auth";
+import { uploadBlob } from "@/lib/azureStorage";
 
 async function requireAdmin() {
   const cookieStore = await cookies();
@@ -100,13 +101,14 @@ export async function createMaterial(formData: FormData) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   const extension = file.name.split(".").pop();
-  const filePath = `materials/${crypto.randomUUID()}.${extension}`;
+  const filePath = `${crypto.randomUUID()}.${extension}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("study-materials")
-    .upload(filePath, buffer, { contentType: file.type || "application/octet-stream", upsert: false });
-
-  if (uploadError) return;
+  try {
+    await uploadBlob("study-materials", filePath, buffer, file.type || "application/octet-stream");
+  } catch (err) {
+    console.error("Azure upload error:", err);
+    return;
+  }
 
   const { error } = await supabase.from("materials").insert({
     category_id: categoryId,

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyAuthToken } from "@/lib/auth";
 import { assertSupabaseAdmin } from "@/lib/supabaseClient";
+import { getSignedUrl } from "@/lib/azureStorage";
 import { DashboardNav } from "./NavBar";
 import { VideoClasses } from "./VideoClasses";
 import MaterialsSection, { MaterialSection } from "./MaterialsSection";
@@ -115,17 +116,16 @@ export default async function DashboardPage() {
   const fileMap = new Map<string, string>();
 
   if (filePaths.length > 0) {
-    const { data: signedData } = await supabase.storage
-      .from("study-materials")
-      .createSignedUrls(filePaths, 60 * 60);
-
-    if (signedData) {
-      signedData.forEach((item: { path: string | null; signedUrl: string }) => {
-        if (item.path && item.signedUrl) {
-          fileMap.set(item.path, item.signedUrl);
+    await Promise.all(
+      filePaths.map(async (path) => {
+        try {
+          const signedUrl = await getSignedUrl("study-materials", path, 60); // 1 hour validity
+          fileMap.set(path, signedUrl);
+        } catch (err) {
+          console.error(`Failed to generate SAS url for ${path}:`, err);
         }
-      });
-    }
+      })
+    );
   }
 
   const materialsWithUrls = materials.map((mat) => ({

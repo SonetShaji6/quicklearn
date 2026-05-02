@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { assertSupabaseAdmin } from "@/lib/supabaseClient";
 import { createMockTest, addMockQuestion, deleteMockTest } from "./actions";

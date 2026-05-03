@@ -239,7 +239,7 @@ export default function Home() {
         <section className="py-20 px-4">
           <div className="mx-auto max-w-5xl relative overflow-hidden rounded-[var(--radius-2xl)]">
             {/* Background */}
-            <div className="absolute inset-0 bg-[var(--foreground)]"></div>
+            <div className="absolute inset-0 bg-slate-950 dark:bg-[#0a0a0a] dark:border dark:border-[var(--border)] rounded-[var(--radius-2xl)]"></div>
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[var(--ql-red)] opacity-10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"></div>
             <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[var(--ql-red)] opacity-5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3"></div>
             
@@ -257,7 +257,7 @@ export default function Home() {
               </p>
               <Link
                 href="/signup"
-                className="btn-primary !bg-white !text-[var(--foreground)] hover:!bg-white/90 !shadow-xl text-base !py-3.5 !px-10 inline-flex"
+                className="btn-primary !bg-white !text-slate-950 hover:!bg-white/90 !shadow-xl text-base !py-3.5 !px-10 inline-flex"
                 id="cta-signup-btn"
               >
                 Create Free Account

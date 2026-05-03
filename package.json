@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "pages:build": "npx @opennextjs/cloudflare",
+    "preview": "npm run build && npm run pages:build && wrangler dev --port 8771",
+    "deploy": "npm run build && npm run pages:build && wrangler deploy",
     "start": "next start",
     "lint": "eslint"
   },

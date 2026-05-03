@@ -1,9 +1,4 @@
 name = "quicklearn"
 pages_build_output_dir = ".open-next"
-main = ".worker-next/index.mjs"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-
-[assets]
-directory = ".worker-next/assets"
-binding = "ASSETS"

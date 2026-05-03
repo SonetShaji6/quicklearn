@@ -70,10 +70,11 @@ async function getMockAttempts(): Promise<AttemptRow[]> {
   return (data as AttemptRow[] | null) ?? [];
 }
 
-export default async function MockTestsAdminPage({ searchParams }: { searchParams: { q?: string } }) {
+export default async function MockTestsAdminPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const params = await searchParams;
   const [tests, categories, attempts] = await Promise.all([getMockTests(), getCategories(), getMockAttempts()]);
   const fallbackCategoryId = categories[0]?.id ?? "";
-  const query = (searchParams?.q ?? "").toLowerCase();
+  const query = (params?.q ?? "").toLowerCase();
 
   const filteredAttempts = attempts.filter((att) => {
     if (!query) return true;

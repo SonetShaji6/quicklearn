@@ -3,15 +3,15 @@ import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 
 export const metadata = {
-  title: "QuickLearn | Login",
-  description: "Login to QuickLearn MCA LBS crash course platform.",
+  title: "MCA RIT | Login",
+  description: "Login to MCA RIT MCA LBS crash course platform.",
 };
 
 export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex overflow-hidden relative">
       {/* Left — Branding Panel */}
-      <div className="hidden lg:flex lg:w-[45%] bg-[var(--foreground)] relative items-center justify-center p-12">
+      <div className="hidden lg:flex lg:w-[45%] bg-[#0a0a0a] relative items-center justify-center p-12">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-[var(--ql-red)] opacity-[0.08] rounded-full blur-[100px]"></div>
           <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-[var(--ql-red)] opacity-[0.05] rounded-full blur-[80px]"></div>
@@ -25,10 +25,10 @@ export default function LoginPage() {
         <div className="relative z-10 max-w-md space-y-8">
           <Link href="/" className="flex items-center gap-3 group">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--ql-red)] text-lg font-black text-white shadow-[var(--shadow-red-lg)] transition-transform group-hover:scale-110">
-              Q
+              M
             </span>
             <span className="text-2xl font-bold text-white tracking-tight">
-              Quick<span className="text-[var(--ql-red)]">Learn</span>
+              MCA <span className="text-[var(--ql-red)]">RIT</span>
             </span>
           </Link>
           
@@ -52,7 +52,7 @@ export default function LoginPage() {
               ))}
             </div>
             <p className="text-white/60 text-sm leading-relaxed italic">
-              &ldquo;QuickLearn made the entire preparation structured. The mock tests alone boosted my confidence significantly.&rdquo;
+              &ldquo;MCA RIT made the entire preparation structured. The mock tests alone boosted my confidence significantly.&rdquo;
             </p>
             <p className="text-xs font-semibold text-white/30 uppercase tracking-wider">— Student, MCA LBS 2025</p>
           </div>
@@ -72,12 +72,12 @@ export default function LoginPage() {
         {/* Logo for mobile */}
         <div className="flex justify-center mb-8 lg:hidden">
           <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <span className="h-10 w-10 rounded-xl bg-[var(--ql-red)] flex items-center justify-center text-white text-lg font-black shadow-[var(--shadow-red)] group-hover:scale-110 transition-transform">
-              Q
-            </span>
-            <span className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
-              Quick<span className="text-[var(--ql-red)]">Learn</span>
-            </span>
+              <span className="h-10 w-10 rounded-xl bg-[var(--ql-red)] flex items-center justify-center text-white text-lg font-black shadow-[var(--shadow-red)] group-hover:scale-110 transition-transform">
+                M
+              </span>
+              <span className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
+                MCA <span className="text-[var(--ql-red)]">RIT</span>
+              </span>
           </Link>
         </div>
 

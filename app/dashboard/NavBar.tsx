@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { logoutAction } from "./actions";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { NotificationBell, type NotificationItem } from "./NotificationBell";
 
 const sections = [
   { id: "overview", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
@@ -15,7 +16,12 @@ function clsx(...args: Array<string | false | null | undefined>) {
   return args.filter(Boolean).join(" ");
 }
 
-export function DashboardNav() {
+interface DashboardNavProps {
+  userId: string;
+  initialNotifications: NotificationItem[];
+}
+
+export function DashboardNav({ userId, initialNotifications }: DashboardNavProps) {
   const [active, setActive] = useState<string>("overview");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
@@ -41,25 +47,28 @@ export function DashboardNav() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--ql-red)] text-sm font-black text-white shadow-[var(--shadow-red)]">
-            Q
-          </span>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--ql-red)] text-white font-black shadow-sm">
+            M
+          </div>
           <div className="leading-tight">
-            <p className="text-sm font-bold text-[var(--text-primary)]">QuickLearn</p>
+            <p className="text-sm font-bold text-[var(--text-primary)]">MCA RIT</p>
             <p className="text-[10px] uppercase tracking-widest font-semibold text-[var(--ql-red)]">Dashboard</p>
           </div>
         </div>
 
-        {/* Mobile menu toggle */}
-        <button
-          className="p-2 text-[var(--text-secondary)] sm:hidden hover:bg-[var(--surface-secondary)] rounded-[var(--radius)] transition-colors"
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-expanded={menuOpen}
-          aria-label="Toggle navigation"
-          type="button"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} /></svg>
-        </button>
+        {/* Mobile: bell + hamburger always visible */}
+        <div className="flex items-center gap-1 sm:hidden">
+          <NotificationBell userId={userId} initialNotifications={initialNotifications} />
+          <button
+            className="p-2 text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] rounded-[var(--radius)] transition-colors"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation"
+            type="button"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} /></svg>
+          </button>
+        </div>
 
         {/* Desktop Nav */}
         <div className="hidden items-center gap-1 text-sm font-medium sm:flex">
@@ -83,6 +92,7 @@ export function DashboardNav() {
             ))}
           </div>
           <div className="mx-2 h-5 w-px bg-[var(--border)]"></div>
+          <NotificationBell userId={userId} initialNotifications={initialNotifications} />
           <ThemeToggle />
           <form action={logoutAction}>
             <button
@@ -101,7 +111,7 @@ export function DashboardNav() {
         menuOpen ? "max-h-[500px] opacity-100 border-t border-[var(--border)]" : "max-h-0 opacity-0"
       )}>
         <div className="glass px-4 pb-4 pt-2 space-y-1">
-          <div className="flex justify-end pt-1 pb-2">
+          <div className="flex items-center justify-end gap-2 pt-1 pb-2">
             <ThemeToggle />
           </div>
           {sections.map((item) => (

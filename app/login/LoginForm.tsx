@@ -37,6 +37,7 @@ function SubmitButton() {
 export function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("next") ?? "";
+  const wasKicked = searchParams.get("kicked") === "1";
   const [state, formAction] = useActionState<LoginState, FormData>(async (_prevState, formData) => loginAction(formData) as Promise<LoginState>, initialState);
 
   return (
@@ -50,6 +51,13 @@ export function LoginForm() {
         <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Welcome back</h3>
         <p className="text-sm text-[var(--text-muted)]">Enter your credentials to access your dashboard.</p>
       </div>
+
+      {wasKicked && !state.message && (
+        <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-amber-200 bg-amber-50 p-3.5 text-sm font-medium text-amber-800">
+          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+          You were signed out because your account was logged in from another device. Only one session is allowed at a time.
+        </div>
+      )}
 
       <div className="space-y-4">
         <div className="space-y-1.5">

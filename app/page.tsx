@@ -3,8 +3,8 @@ import { Header } from "@/app/components/Header";
 
 const features = [
   {
-    title: "Military-grade security",
-    description: "Protected access with JWT tokens and HTTP-only cookies, so your progress and quiz history stay completely private.",
+    title: "Secure & Private",
+    description: "Your progress, quiz history, and account details are safely protected so you can focus entirely on learning without distractions.",
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -47,24 +47,14 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
     ),
-  },
-  {
-    title: "Admin control center",
-    description: "Full content management for admins — approve users, upload materials, create tests, all from one dashboard.",
-    icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
+  }
 ];
 
 const stats = [
-  { value: "500+", label: "Students enrolled" },
-  { value: "120+", label: "Video lessons" },
-  { value: "98%", label: "Pass rate" },
-  { value: "24h", label: "Support response" },
+  { value: "50+", label: "Video Lessons" },
+  { value: "20+", label: "Mock Tests" },
+  { value: "24/7", label: "Access Anytime" },
+  { value: "1", label: "Goal: Crack LBS" },
 ];
 
 export default function Home() {
@@ -124,7 +114,7 @@ export default function Home() {
               <div className="relative">
                 {/* Glow */}
                 <div className="absolute -inset-4 bg-[var(--ql-red)] opacity-[0.04] rounded-[2rem] blur-2xl"></div>
-                
+
                 {/* Main Card */}
                 <div className="ql-card-static overflow-hidden relative">
                   {/* Window chrome */}
@@ -134,9 +124,9 @@ export default function Home() {
                       <div className="w-2.5 h-2.5 rounded-full bg-[var(--warning)] opacity-80"></div>
                       <div className="w-2.5 h-2.5 rounded-full bg-[var(--success)] opacity-80"></div>
                     </div>
-                    <div className="mx-auto text-[11px] font-medium text-[var(--text-muted)] tracking-wide">QuickLearn Dashboard</div>
+                    <div className="mx-auto text-[11px] font-medium text-[var(--text-muted)] tracking-wide">MCA RIT Dashboard</div>
                   </div>
-                  
+
                   {/* Dashboard preview content */}
                   <div className="p-6 space-y-5 bg-[var(--surface)]">
                     {/* Progress */}
@@ -197,6 +187,69 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ─── ABOUT MCA & LBS ─────────────────────────────────── */}
+        <section className="py-20 bg-[var(--surface-secondary)] border-b border-[var(--border)]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+              <p className="section-label justify-center">Your Pathway to IT</p>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)]">
+                Everything you need to know about the exam
+              </h2>
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-3">
+              {/* Card 1: What is MCA? */}
+              <div className="ql-card p-8 bg-[var(--surface)] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
+                  <svg className="w-24 h-24 text-[var(--ql-red)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                </div>
+                <div className="relative z-10 space-y-4">
+                  <div className="w-12 h-12 rounded-xl bg-[var(--accent-light)] text-[var(--ql-red)] flex items-center justify-center mb-6">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2" /></svg>
+                  </div>
+                  <h3 className="text-xl font-black text-[var(--text-primary)]">What is MCA?</h3>
+                  <p className="text-[var(--text-secondary)] leading-relaxed text-sm">
+                    Master of Computer Applications (MCA) is a prestigious postgraduate program designed for students who want to dive deep into computer science, software development, and modern IT architecture. It bridges the gap between academic theory and industry practices.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 2: What is MCA LBS Entrance? */}
+              <div className="ql-card p-8 bg-[var(--surface)] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
+                  <svg className="w-24 h-24 text-[var(--ql-red)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                </div>
+                <div className="relative z-10 space-y-4">
+                  <div className="w-12 h-12 rounded-xl bg-[var(--accent-light)] text-[var(--ql-red)] flex items-center justify-center mb-6">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                  </div>
+                  <h3 className="text-xl font-black text-[var(--text-primary)]">The LBS Entrance</h3>
+                  <p className="text-[var(--text-secondary)] leading-relaxed text-sm">
+                    The LBS Centre for Science & Technology conducts the Kerala state-level MCA entrance exam. Clearing this exam with a high rank is the gateway to securing admissions in the top government and self-financing engineering colleges across Kerala.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 3: Why Join Us? */}
+              <div className="ql-card p-8 bg-[var(--surface)] relative overflow-hidden group border-[var(--ql-red)]/30 shadow-[var(--shadow-red)]">
+                <div className="absolute inset-0 bg-gradient-to-br from-[var(--ql-red-light)] to-transparent opacity-50"></div>
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
+                  <svg className="w-24 h-24 text-[var(--ql-red)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                </div>
+                <div className="relative z-10 space-y-4">
+                  <div className="w-12 h-12 rounded-xl bg-[var(--ql-red)] text-white flex items-center justify-center mb-6 shadow-[var(--shadow-red)]">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <h3 className="text-xl font-black text-[var(--text-primary)]">Why join ?</h3>
+                  <p className="text-[var(--text-secondary)] leading-relaxed text-sm">
+                    We eliminate the clutter. Instead of reading through endless textbooks, you get concise video crash courses, highly relevant mock tests matching the exact LBS syllabus, and instant performance analytics. We focus strictly on what gets you a top rank.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ─── FEATURES ────────────────────────────────────────── */}
         <section id="features" className="py-20 lg:py-28 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -242,7 +295,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-slate-950 dark:bg-[#0a0a0a] dark:border dark:border-[var(--border)] rounded-[var(--radius-2xl)]"></div>
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[var(--ql-red)] opacity-10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"></div>
             <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[var(--ql-red)] opacity-5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3"></div>
-            
+
             {/* Content */}
             <div className="relative z-10 px-8 py-16 sm:px-16 sm:py-20 text-center space-y-8">
               <div className="inline-flex items-center gap-2 rounded-[var(--radius)] border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 backdrop-blur-sm">
@@ -253,7 +306,7 @@ export default function Home() {
                 Ready to start your preparation?
               </h2>
               <p className="text-white/50 text-lg max-w-xl mx-auto">
-                Join the community of students mastering the MCA LBS syllabus with QuickLearn.
+                Join the community of students mastering the MCA LBS syllabus with MCA RIT.
               </p>
               <Link
                 href="/signup"
@@ -276,10 +329,10 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2.5">
               <span className="h-8 w-8 rounded-lg bg-[var(--ql-red)] flex items-center justify-center text-white text-sm font-black shadow-[var(--shadow-red)]">
-                Q
+                M
               </span>
               <span className="font-bold text-[var(--text-primary)] text-lg">
-                Quick<span className="text-[var(--ql-red)]">Learn</span>
+                MCA <span className="text-[var(--ql-red)]">RIT</span>
               </span>
             </div>
             <div className="flex gap-6 text-sm font-medium text-[var(--text-tertiary)]">
@@ -288,7 +341,7 @@ export default function Home() {
               <Link href="/signup" className="hover:text-[var(--ql-red)] transition-colors">Sign Up</Link>
             </div>
             <p className="text-xs text-[var(--text-muted)]">
-              © {new Date().getFullYear()} QuickLearn. All rights reserved.
+              © {new Date().getFullYear()} MCA RIT. All rights reserved.
             </p>
           </div>
         </div>

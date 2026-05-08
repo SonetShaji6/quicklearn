@@ -9,17 +9,19 @@ import { DashboardNav } from "./NavBar";
 import { VideoClasses } from "./VideoClasses";
 import MaterialsSection, { MaterialSection } from "./MaterialsSection";
 import MockTestsSection, { MockAttempt, MockTest } from "./MockTestsSection";
+import { SessionGuard } from "./SessionGuard";
+import type { NotificationItem } from "./NotificationBell";
 
 export const metadata = {
-  title: "QuickLearn | Dashboard",
-  description: "Your QuickLearn MCA LBS dashboard for MCA LBS crash course.",
+  title: "MCA RIT | Dashboard",
+  description: "Your MCA RIT dashboard for MCA LBS crash course.",
 };
 
 type CategoryWithLessons = {
   id: string;
   name: string;
   description: string | null;
-  lessons: { id: string; title: string; description: string | null; playback_id: string; duration: string | null }[];
+  lessons: { id: string; title: string; description: string | null; playback_id: string; duration: string | null; is_enabled?: boolean }[];
 };
 
 type MaterialRow = {
@@ -30,6 +32,7 @@ type MaterialRow = {
   file_path: string;
   mime_type: string | null;
   size_bytes: number | null;
+  is_enabled?: boolean;
 };
 
 type MockTestRow = {
@@ -67,7 +70,13 @@ export default async function DashboardPage() {
     return redirect("/login?next=/dashboard");
   }
 
-  const payload = await verifyAuthToken(token);
+  let payload;
+  try {
+    payload = await verifyAuthToken(token);
+  } catch {
+    return redirect("/login?next=/dashboard");
+  }
+
   if (payload.role === "admin") {
     return redirect("/admin");
   }
@@ -79,7 +88,7 @@ export default async function DashboardPage() {
   const supabase = assertSupabaseAdmin();
   const { data: user } = await supabase
     .from("users")
-    .select("name,college,degree,status")
+    .select("name,college,degree,status,session_token")
     .eq("id", payload.userId)
     .single();
 
@@ -87,12 +96,29 @@ export default async function DashboardPage() {
     return redirect("/login?next=/dashboard");
   }
 
+  // Single-device enforcement: if the session token in the JWT doesn't match
+  // the one in the DB, it means the user logged in from another device.
+  if (payload.sessionToken && user.session_token && payload.sessionToken !== user.session_token) {
+    return redirect("/login?kicked=1");
+  }
+
   const { data: categoriesRaw } = await supabase
     .from("categories")
-    .select("id,name,description,lessons:lessons(id,title,description,playback_id,duration)")
+    .select("id,name,description,lessons:lessons(*)")
     .order("created_at", { ascending: false });
 
-  const categories = (categoriesRaw as CategoryWithLessons[] | null) ?? [];
+  let categories = (categoriesRaw as CategoryWithLessons[] | null) ?? [];
+  const othersIndex = categories.findIndex((c) => c.name.toLowerCase() === "others");
+  if (othersIndex > 0) {
+    const others = categories.splice(othersIndex, 1)[0];
+    categories.unshift(others);
+  }
+  categories.forEach((c) => {
+    if (c.lessons) {
+      c.lessons = c.lessons.filter((l) => l.is_enabled !== false);
+    }
+  });
+
   const lessons = categories.flatMap((c) => c.lessons ?? []);
   const totalLessons = lessons.length;
 
@@ -109,10 +135,10 @@ export default async function DashboardPage() {
 
   const { data: materialsRaw } = await supabase
     .from("materials")
-    .select("id,category_id,title,description,file_path,mime_type,size_bytes")
+    .select("*")
     .order("created_at", { ascending: false });
 
-  const materials = (materialsRaw as MaterialRow[] | null) ?? [];
+  const materials = ((materialsRaw as MaterialRow[] | null) ?? []).filter((m) => m.is_enabled !== false);
 
   const filePaths = materials.map((m) => m.file_path);
   const fileMap = new Map<string, string>();
@@ -180,9 +206,34 @@ export default async function DashboardPage() {
 
   const mockAttempts = (mockAttemptsRaw ?? []) as MockAttempt[];
 
+  // ── Notifications ───────────────────────────────────────────────
+  const { data: notifRaw } = await supabase
+    .from("notification_recipients")
+    .select("id,notification_id,is_read,created_at:notifications(created_at),notifications(title,body)")
+    .eq("user_id", payload.userId)
+    .order("created_at", { referencedTable: "notifications", ascending: false });
+
+  type NotifRawRow = {
+    id: string;
+    notification_id: string;
+    is_read: boolean;
+    notifications: { title: string; body: string; created_at: string } | null;
+  };
+
+  const initialNotifications: NotificationItem[] = ((notifRaw ?? []) as unknown as NotifRawRow[])
+    .map((row) => ({
+      id: row.id,
+      notification_id: row.notification_id,
+      title: row.notifications?.title ?? "",
+      body: row.notifications?.body ?? "",
+      is_read: row.is_read,
+      created_at: row.notifications?.created_at ?? "",
+    })).filter((n) => n.title !== "");
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <DashboardNav />
+      <SessionGuard />
+      <DashboardNav userId={payload.userId} initialNotifications={initialNotifications} />
 
       <main className="mx-auto max-w-6xl space-y-10 px-4 pb-16 pt-8 sm:px-6" id="overview">
         {/* ── Overview Section ───────────────────────────────── */}

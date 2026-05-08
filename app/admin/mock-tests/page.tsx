@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { assertSupabaseAdmin } from "@/lib/supabaseClient";
 import { createMockTest, addMockQuestion, deleteMockTest } from "./actions";
+import { JsonImportForm } from "./JsonImportForm";
 
 type MockTestRow = {
   id: string;
@@ -224,6 +225,9 @@ export default async function MockTestsAdminPage({ searchParams }: { searchParam
                 Add question
               </button>
             </form>
+
+            {/* JSON Import */}
+            <JsonImportForm testId={test.id} testTitle={test.title} />
           </div>
 
           <div className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm max-h-[520px] overflow-y-auto pr-1">

@@ -6,7 +6,7 @@ import { getSignedUrl } from "@/lib/azureStorage";
 import { UserManagementClient } from "./UserManagementClient";
 
 export const metadata = {
-  title: "QuickLearn | User Management",
+  title: "MCA RIT | User Management",
   description: "Manage registered users, approvals, and credentials.",
 };
 
@@ -19,7 +19,7 @@ async function getAllUsers() {
     
   if (error) {
     console.error("Failed to fetch users:", error);
-    return [];
+    return { users: [], error: null };
   }
 
   const users = data || [];
@@ -29,6 +29,8 @@ async function getAllUsers() {
 
   const pathMap = new Map<string, string>();
 
+  let globalAzureError = null;
+
   if (proofPaths.length > 0) {
     // Generate SAS URLs for Azure Blob Storage
     await Promise.all(
@@ -36,35 +38,44 @@ async function getAllUsers() {
         try {
           const signedUrl = await getSignedUrl("payment-proofs", path, 60); // 1 hour validity
           pathMap.set(path, signedUrl);
-        } catch (err) {
+        } catch (err: any) {
           console.error(`Failed to generate SAS url for ${path}:`, err);
+          globalAzureError = `Azure SAS Error: ${err.message || String(err)}`;
         }
       })
     );
   }
 
-  return users.map((u) => ({
-    ...u,
-    signedUrl: u.payment_proof ? pathMap.get(u.payment_proof) ?? null : null,
-  })) as {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    college: string;
-    degree: string;
-    status: string;
-    payment_proof: string | null;
-    signedUrl: string | null;
-    created_at: string;
-  }[];
+  return {
+    users: users.map((u) => ({
+      ...u,
+      signedUrl: u.payment_proof ? pathMap.get(u.payment_proof) ?? null : null,
+    })) as {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      college: string;
+      degree: string;
+      status: string;
+      payment_proof: string | null;
+      signedUrl: string | null;
+      created_at: string;
+    }[],
+    error: globalAzureError
+  };
 }
 
 export default async function UserManagementPage() {
-  const users = await getAllUsers();
+  const { users, error } = await getAllUsers();
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 pb-20">
+      {error && (
+        <div className="bg-red-500 text-white p-4 font-mono text-sm max-w-7xl mx-auto mt-4 rounded-md shadow-lg break-all">
+          CRITICAL AZURE ERROR: {error}
+        </div>
+      )}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 dark:bg-slate-900/80 dark:border-slate-800">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="flex items-center gap-4">

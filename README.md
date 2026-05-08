@@ -1,80 +1,191 @@
-## QuickLearn
+# MCA RIT — MCA LBS Crash Course Platform
 
-Full-stack Next.js app for the MCA LBS crash course with Supabase-backed auth, content, and mock tests.
+A full-stack Next.js web application for the MCA LBS entrance exam crash course. Built with Supabase, Azure Blob Storage, and deployed on Cloudflare Pages.
 
-### Features
-- Auth: signup with payment proof upload, JWT login, admin approval gate.
-- Dashboard: video classes (YouTube URLs), study materials with signed URLs, lesson progress tracking.
-- Mock tests: timed MCQs stored in Supabase (tests, questions, attempts). Students see detailed review; admins see all attempts with per-question choices and search.
-- Admin: manage users, categories, lessons, materials, and mock tests.
+## ✨ Features
 
-### Quick start
+### 🎓 Student Dashboard
+- **Video Classes** — YouTube-embedded video lessons organized by category with completion tracking
+- **Study Materials** — Downloadable PDFs, DOCXs, ZIPs served via Azure Blob Storage signed URLs with in-browser preview
+- **Mock Tests** — Timed MCQ assessments with instant scoring, detailed answer review, and localStorage-based progress persistence
+- **Progress Tracking** — Visual progress bars, completion stats, and per-lesson checkmarks
+
+### 🔐 Security
+- **JWT Authentication** — Secure httpOnly cookie-based sessions with 7-day expiry
+- **Single-Device Login** — Only one active session per account; logging in from a new device auto-kicks the previous one within ~15 seconds via real-time polling
+- **Rate Limiting** — 3 failed login attempts locks the account for 1 hour
+- **Admin Authorization** — Middleware-enforced admin-only routes with role-based JWT claims
+- **Payment Verification** — Signup requires payment proof upload; admin must approve before access is granted
+
+### 🛠️ Admin Panel
+- **User Management** — Approve/reject registrations with payment proof viewing
+- **Content Management** — Create categories, add YouTube video lessons, upload study materials
+- **Visibility Control** — Enable/disable individual lessons and materials (students only see enabled content)
+- **Mock Test Builder** — Create timed tests, add questions manually or bulk-import via JSON file
+- **Student Attempts** — View all mock test submissions with per-question answer breakdowns and search
+
+### 📱 Mobile Responsive
+- Fully responsive design across all pages (signup, login, dashboard, admin)
+- Mobile-optimized video player layout and horizontal category scrolling
+- Card-based mobile layouts for admin user management
+
+## 🚀 Quick Start
+
 ```bash
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
-App runs on http://localhost:3000. Use `/signup`, `/login`, `/dashboard`, `/admin`, `/admin/mock-tests`.
 
-### Environment (.env.local)
-```
+App runs at [http://localhost:3000](http://localhost:3000)
+
+**Routes:** `/signup` · `/login` · `/dashboard` · `/admin` · `/admin/mock-tests`
+
+## ⚙️ Environment Variables
+
+Create `.env.local` in the project root:
+
+```env
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 AUTH_SECRET=long-random-string-for-jwt
 ADMIN_EMAILS=admin1@example.com,admin2@example.com
+AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
 ```
 
-### Database (Supabase)
-1) Run `docs/auth_schema.sql` to create `users`, `categories`, `lessons`, `lesson_progress`, `materials`.
-2) Add mock test tables (run in SQL editor):
+> ⚠️ `AUTH_SECRET` is mandatory — the app will throw an error if it's missing. Never use a default/fallback value.
+
+## 🗄️ Database Schema (Supabase)
+
+### 1. Run the base schema
+Execute `docs/auth_schema.sql` to create core tables: `users`, `categories`, `lessons`, `lesson_progress`, `materials`.
+
+### 2. Add mock test tables
 ```sql
-create extension if not exists "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-create table if not exists mock_tests (
-	id uuid primary key default gen_random_uuid(),
-	title text not null,
-	category_id uuid not null references categories(id) on delete cascade,
-	duration_minutes integer not null check (duration_minutes > 0),
-	start_at timestamptz not null,
-	created_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS mock_tests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  category_id uuid NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  duration_minutes integer NOT NULL CHECK (duration_minutes > 0),
+  start_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
-create table if not exists mock_questions (
-	id uuid primary key default gen_random_uuid(),
-	test_id uuid not null references mock_tests(id) on delete cascade,
-	text text not null,
-	option_a text not null,
-	option_b text not null,
-	option_c text not null,
-	option_d text not null,
-	correct_index smallint not null check (correct_index between 0 and 3),
-	created_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS mock_questions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  test_id uuid NOT NULL REFERENCES mock_tests(id) ON DELETE CASCADE,
+  text text NOT NULL,
+  option_a text NOT NULL,
+  option_b text NOT NULL,
+  option_c text NOT NULL,
+  option_d text NOT NULL,
+  correct_index smallint NOT NULL CHECK (correct_index BETWEEN 0 AND 3),
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
-create table if not exists mock_attempts (
-	test_id uuid not null references mock_tests(id) on delete cascade,
-	user_id uuid not null references users(id) on delete cascade,
-	answers integer[] not null default '{}',
-	score integer not null default 0,
-	total integer not null default 0,
-	submitted_at timestamptz not null default now(),
-	primary key (test_id, user_id)
+CREATE TABLE IF NOT EXISTS mock_attempts (
+  test_id uuid NOT NULL REFERENCES mock_tests(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  answers integer[] NOT NULL DEFAULT '{}',
+  score integer NOT NULL DEFAULT 0,
+  total integer NOT NULL DEFAULT 0,
+  submitted_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (test_id, user_id)
 );
 ```
 
-### Storage buckets
-- `payment-proofs` (private) — uploads during signup.
-- `study-materials` (private) — files shown with signed URLs.
+### 3. Add security & content control columns
+```sql
+-- Content visibility toggles
+ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS is_enabled boolean NOT NULL DEFAULT true;
+ALTER TABLE public.materials ADD COLUMN IF NOT EXISTS is_enabled boolean NOT NULL DEFAULT true;
 
-### Usage notes
-- Lessons: store full YouTube URL in `lessons.playback_id`.
-- Mock tests: create tests/questions at `/admin/mock-tests`; students take them on `/dashboard` and can review answers after submitting.
-- RLS: keep writes through server actions (service role); students only read their data.
+-- Login rate limiting
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS failed_login_attempts integer NOT NULL DEFAULT 0;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS locked_until timestamptz DEFAULT NULL;
 
-### Scripts
-- `npm run dev` — local dev
-- `npm run lint` — ESLint
-- `npm run build` / `npm start` — production build & serve
+-- Single-device session enforcement
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS session_token text DEFAULT NULL;
+```
 
-### Tech
-- Next.js 16 (App Router), TypeScript, Tailwind, Supabase JS, JWT auth, server actions, Plyr for media.
+## 📦 Storage
+
+| Container | Access | Purpose |
+|---|---|---|
+| `payment-proofs` | Private | Payment screenshots uploaded during signup |
+| `study-materials` | Private | PDFs/DOCXs served via time-limited SAS URLs |
+
+## 📋 Mock Test JSON Import Format
+
+Admins can bulk-import questions via JSON file at `/admin/mock-tests`:
+
+```json
+[
+  {
+    "text": "What is the capital of India?",
+    "option_a": "Mumbai",
+    "option_b": "Delhi",
+    "option_c": "Chennai",
+    "option_d": "Kolkata",
+    "correct_index": 1
+  }
+]
+```
+
+`correct_index`: `0` = A, `1` = B, `2` = C, `3` = D
+
+## 🧱 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS + CSS custom properties |
+| Database | Supabase (PostgreSQL) |
+| File Storage | Azure Blob Storage |
+| Auth | JWT (jose) + bcryptjs |
+| Video Player | Plyr (YouTube embed) |
+| Hosting | Cloudflare Pages (via OpenNext adapter) |
+
+## 📜 Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Local development server |
+| `npm run build` | Production build |
+| `npm run start` | Serve production build |
+| `npm run lint` | ESLint check |
+| `npm run deploy` | Build for Cloudflare Pages |
+
+## 📁 Project Structure
+
+```
+app/
+├── page.tsx              # Landing page
+├── login/                # Login page + actions
+├── signup/               # Signup page + actions
+├── dashboard/            # Student dashboard
+│   ├── VideoClasses.tsx   # Video player + lesson list
+│   ├── MaterialsSection.tsx # Study materials with preview
+│   ├── MockTestsSection.tsx # Timed mock test engine
+│   ├── SessionGuard.tsx   # Real-time session polling
+│   └── NavBar.tsx         # Dashboard navigation
+├── admin/                # Admin panel
+│   ├── mock-tests/        # Mock test management + JSON import
+│   └── contentActions.ts  # Content visibility toggles
+├── api/
+│   └── session-check/     # Session validation endpoint
+├── components/           # Shared components (Header, ThemeToggle, etc.)
+└── layout.tsx            # Root layout with SEO metadata
+lib/
+├── auth.ts               # JWT creation/verification, password hashing
+├── azureStorage.ts       # Azure Blob upload + SAS URL generation
+├── env.ts                # Cloudflare/Node env variable resolver
+└── supabaseClient.ts     # Supabase admin client
+middleware.ts             # Admin route protection
+```

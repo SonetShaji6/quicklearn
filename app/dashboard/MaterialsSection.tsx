@@ -1,6 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+
+function clsx(...args: Array<string | false | null | undefined>) {
+  return args.filter(Boolean).join(" ");
+}
 
 type BaseMaterial = {
   id: string;
@@ -87,9 +91,29 @@ export default function MaterialsSection({ sections }: { sections: MaterialSecti
       }
     }
 
+    window.history.pushState({ previewOpen: true }, "");
     setPreview({ material, kind, previewUrl, externalUrl });
     setPreviewLoading(!!previewUrl);
   };
+
+  const closePreview = () => {
+    if (window.history.state?.previewOpen) {
+      // Let the popstate listener clear the preview
+      window.history.back();
+    } else {
+      setPreview(null);
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (preview) {
+        setPreview(null);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [preview]);
 
   return (
     <div className="space-y-5" id="materials">
@@ -103,18 +127,24 @@ export default function MaterialsSection({ sections }: { sections: MaterialSecti
             <button
               key={section.id}
               onClick={() => setActiveSectionId(section.id)}
-              className={`rounded-[var(--radius)] border px-3 py-1.5 text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+              className={clsx(
+                "group rounded-[var(--radius)] border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200",
                 activeSectionId === section.id
                   ? "border-[var(--ql-red)] bg-[var(--ql-red)] text-white shadow-[var(--shadow-red)]"
                   : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--ql-red)] hover:text-[var(--ql-red)]"
-              }`}
+              )}
             >
-              {section.name}
-              <span className={`rounded-[var(--radius-sm)] px-1.5 py-0.5 text-[10px] font-bold ${
-                activeSectionId === section.id ? "bg-white/20 text-white" : "bg-[var(--surface-secondary)] text-[var(--text-muted)]"
-              }`}>
-                {section.materials.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <span>{section.name}</span>
+                <span className={clsx(
+                  "px-2 py-0.5 rounded-full text-xs font-black min-w-[24px] text-center shadow-sm",
+                  activeSectionId === section.id 
+                    ? "bg-white text-[var(--ql-red)]" 
+                    : "bg-[var(--surface-tertiary)] text-[var(--text-primary)] group-hover:bg-[var(--ql-red-light)] group-hover:text-[var(--ql-red)]"
+                )}>
+                  {section.materials.length}
+                </span>
+              </div>
             </button>
           ))}
         </div>
@@ -210,7 +240,7 @@ export default function MaterialsSection({ sections }: { sections: MaterialSecti
                   </a>
                 )}
                 <button
-                  onClick={() => setPreview(null)}
+                  onClick={closePreview}
                   className="w-8 h-8 rounded-[var(--radius)] bg-[var(--surface-secondary)] text-[var(--text-muted)] hover:bg-[var(--danger-light)] hover:text-[var(--danger)] transition-colors flex items-center justify-center"
                   aria-label="Close"
                 >

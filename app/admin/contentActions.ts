@@ -99,12 +99,11 @@ export async function createMaterial(formData: FormData) {
 
   const supabase = assertSupabaseAdmin();
   const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
   const extension = file.name.split(".").pop();
   const filePath = `${crypto.randomUUID()}.${extension}`;
 
   try {
-    await uploadBlob("study-materials", filePath, buffer, file.type || "application/octet-stream");
+    await uploadBlob("study-materials", filePath, arrayBuffer, file.type || "application/octet-stream");
   } catch (err) {
     console.error("Azure upload error:", err);
     return;
@@ -121,6 +120,30 @@ export async function createMaterial(formData: FormData) {
 
   if (error) return;
 
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}
+
+export async function toggleLessonVisibility(lessonId: string, currentStatus: boolean) {
+  await requireAdmin();
+  const supabase = assertSupabaseAdmin();
+  const { error } = await supabase.from("lessons").update({ is_enabled: !currentStatus }).eq("id", lessonId);
+  if (error) {
+    console.error("Failed to toggle lesson visibility:", error);
+    return;
+  }
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}
+
+export async function toggleMaterialVisibility(materialId: string, currentStatus: boolean) {
+  await requireAdmin();
+  const supabase = assertSupabaseAdmin();
+  const { error } = await supabase.from("materials").update({ is_enabled: !currentStatus }).eq("id", materialId);
+  if (error) {
+    console.error("Failed to toggle material visibility:", error);
+    return;
+  }
   revalidatePath("/admin");
   revalidatePath("/dashboard");
 }

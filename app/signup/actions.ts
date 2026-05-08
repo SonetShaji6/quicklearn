@@ -32,16 +32,30 @@ export async function signupAction(formData: FormData) {
   const supabase = assertSupabaseAdmin();
 
   // Upload payment proof to Azure Blob Storage
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  let arrayBuffer: ArrayBuffer;
+  try {
+    arrayBuffer = await file.arrayBuffer();
+  } catch (err) {
+    console.error("File read error (possible low memory):", err);
+    return {
+      success: false,
+      message:
+        "Unable to process your file — your device may be low on memory. Try using a smaller image or close other apps and retry.",
+    };
+  }
+
   const extension = file.name.split(".").pop();
   const filePath = `${crypto.randomUUID()}.${extension}`;
 
   try {
-    await uploadBlob("payment-proofs", filePath, buffer, file.type);
+    await uploadBlob("payment-proofs", filePath, arrayBuffer, file.type);
   } catch (err) {
     console.error("Azure upload error:", err);
-    return { success: false, message: "Upload failed. Please try again." };
+    return {
+      success: false,
+      message:
+        "Upload failed. Please check your internet connection and try again.",
+    };
   }
 
   const hashed = await hashPassword(password);

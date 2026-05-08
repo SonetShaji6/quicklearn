@@ -71,3 +71,80 @@ export async function deleteMockTest(testId: string) {
   revalidatePath("/admin/mock-tests");
   revalidatePath("/dashboard");
 }
+
+/**
+ * Import questions from a JSON file.
+ *
+ * Expected JSON format – an array of objects:
+ * [
+ *   {
+ *     "text": "What is ...?",
+ *     "option_a": "...",
+ *     "option_b": "...",
+ *     "option_c": "...",
+ *     "option_d": "...",
+ *     "correct_index": 0          // 0=A, 1=B, 2=C, 3=D
+ *   }
+ * ]
+ */
+export async function importQuestionsFromJson(formData: FormData) {
+  await requireAdmin();
+  const testId = (formData.get("testId") as string | null)?.trim();
+  const file = formData.get("jsonFile") as File | null;
+
+  if (!testId || !file) return { error: "Missing test ID or file." };
+
+  let questions: Array<{
+    text: string;
+    option_a: string;
+    option_b: string;
+    option_c: string;
+    option_d: string;
+    correct_index: number;
+  }>;
+
+  try {
+    const raw = await file.text();
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return { error: "JSON must be an array of question objects." };
+    questions = parsed;
+  } catch {
+    return { error: "Invalid JSON file." };
+  }
+
+  // Validate each question
+  const rows = [];
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
+    if (!q.text || !q.option_a || !q.option_b || !q.option_c || !q.option_d) {
+      return { error: `Question ${i + 1} is missing required fields (text, option_a–d).` };
+    }
+    const ci = Number(q.correct_index);
+    if (isNaN(ci) || ci < 0 || ci > 3) {
+      return { error: `Question ${i + 1} has invalid correct_index (must be 0–3).` };
+    }
+    rows.push({
+      test_id: testId,
+      text: String(q.text).trim(),
+      option_a: String(q.option_a).trim(),
+      option_b: String(q.option_b).trim(),
+      option_c: String(q.option_c).trim(),
+      option_d: String(q.option_d).trim(),
+      correct_index: ci,
+    });
+  }
+
+  if (rows.length === 0) return { error: "No questions found in the file." };
+
+  const supabase = assertSupabaseAdmin();
+  const { error } = await supabase.from("mock_questions").insert(rows);
+  if (error) {
+    console.error("Import error:", error);
+    return { error: `Database error: ${error.message}` };
+  }
+
+  revalidatePath("/admin/mock-tests");
+  revalidatePath("/dashboard");
+  return { success: `Imported ${rows.length} questions successfully.` };
+}
+

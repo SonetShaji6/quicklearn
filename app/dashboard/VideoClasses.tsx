@@ -47,27 +47,8 @@ export function VideoClasses({ completed, categories }: { completed: string[]; c
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]" id="videos">
-      <div className="space-y-4">
-        {/* Category pills */}
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => {
-                setCategoryId(cat.id);
-                setSelectedLesson(cat.lessons?.[0] ?? null);
-              }}
-              className={clsx(
-                "rounded-[var(--radius)] border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200",
-                categoryId === cat.id
-                  ? "border-[var(--ql-red)] bg-[var(--ql-red)] text-white shadow-[var(--shadow-red)]"
-                  : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--ql-red)] hover:text-[var(--ql-red)]"
-              )}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
+      {/* LEFT COLUMN: Video Player */}
+      <div className="space-y-4 order-1 lg:order-1">
 
         {/* Video Player */}
         <div className="ql-card-static overflow-hidden">
@@ -103,8 +84,41 @@ export function VideoClasses({ completed, categories }: { completed: string[]; c
         </div>
       </div>
 
-      {/* Course content sidebar */}
-      <div className="space-y-3 h-fit">
+      {/* RIGHT COLUMN: Categories & Lessons */}
+      <div className="space-y-4 order-2 lg:order-2 h-fit overflow-hidden">
+        {/* Category pills */}
+        <div className="flex overflow-x-auto snap-x no-scrollbar pb-2 gap-2">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => {
+                setCategoryId(cat.id);
+                setSelectedLesson(cat.lessons?.[0] ?? null);
+              }}
+              className={clsx(
+                "snap-start shrink-0 group rounded-[var(--radius)] border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200",
+                categoryId === cat.id
+                  ? "border-[var(--ql-red)] bg-[var(--ql-red)] text-white shadow-[var(--shadow-red)]"
+                  : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--ql-red)] hover:text-[var(--ql-red)]"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <span>{cat.name}</span>
+                <span className={clsx(
+                  "px-2 py-0.5 rounded-full text-xs font-black min-w-[24px] text-center shadow-sm",
+                  categoryId === cat.id 
+                    ? "bg-white text-[var(--ql-red)]" 
+                    : "bg-[var(--surface-tertiary)] text-[var(--text-primary)] group-hover:bg-[var(--ql-red-light)] group-hover:text-[var(--ql-red)]"
+                )}>
+                  {cat.lessons?.length ?? 0}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Course content sidebar */}
+        <div className="space-y-3">
         <div className="flex items-center justify-between px-0.5">
           <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
             Course Content
@@ -183,6 +197,7 @@ export function VideoClasses({ completed, categories }: { completed: string[]; c
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
@@ -232,7 +247,14 @@ function PlyrEmbed({ playbackId, title, onMarkComplete }: { playbackId: string; 
       plyrInstance.current = new PlyrCtor(playerRef.current as unknown, {
         captions: { active: true, update: true, language: "en" },
         fullscreen: { enabled: true, fallback: true, iosNative: true },
-        youtube: { rel: 0, modestbranding: 1 },
+        youtube: { 
+          noCookie: true, // Use youtube-nocookie.com to reduce tracking
+          rel: 0, 
+          modestbranding: 1,
+          iv_load_policy: 3,
+          fs: 0,
+          disablekb: 1
+        },
         controls: ["play-large", "play", "progress", "current-time", "mute", "volume", "settings", "pip", "airplay", "fullscreen"],
       });
     })();

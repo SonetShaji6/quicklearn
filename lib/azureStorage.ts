@@ -1,4 +1,4 @@
-import { generateBlobSASQueryParameters, BlobSASPermissions, StorageSharedKeyCredential } from "@azure/storage-blob";
+import { generateBlobSASQueryParameters, BlobSASPermissions, StorageSharedKeyCredential, BlockBlobClient } from "@azure/storage-blob";
 import { getEnvSync } from "./env";
 
 export function getAzureCredentials() {
@@ -50,21 +50,10 @@ export async function uploadBlob(containerName: string, blobName: string, data: 
 
   const uploadUrl = `https://${accountName}.blob.${endpointSuffix}/${containerName}/${blobName}?${sasToken}`;
   
-  const response = await fetch(uploadUrl, {
-    method: "PUT",
-    cache: "no-store",
-    headers: {
-      "x-ms-blob-type": "BlockBlob",
-      "Content-Type": contentType,
-      "Content-Length": data.byteLength.toString(),
-    },
-    body: data,
+  const blockBlobClient = new BlockBlobClient(uploadUrl);
+  await blockBlobClient.uploadData(data, {
+    blobHTTPHeaders: { blobContentType: contentType }
   });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Azure upload failed: ${response.status} ${text}`);
-  }
   
   return `https://${accountName}.blob.${endpointSuffix}/${containerName}/${blobName}`;
 }
